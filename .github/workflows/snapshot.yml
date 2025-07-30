@@ -27,17 +27,10 @@ jobs:
           chmod +x ./grab_snapshot.sh
           ./grab_snapshot.sh
 
-      - name: Configure git user
+      - name: push
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@users.noreply.github.com"
-
-      - name: Commit and push new snapshot
-        run: |
-          if [ -n "$(git status --porcelain snapshots)" ]; then
-            git add snapshots
-            git commit -m "Add snapshot $(date +'%Y-%m-%d %H:%M') [skip ci]"
-            git push
-          else
-            echo "No changes to commit"
-          fi
+          git config --global user.name "github-actions"
+          git config --global user.email ""
+          git add .
+          git diff-index --quiet HEAD || git commit -m "periodic update"
+          git push
