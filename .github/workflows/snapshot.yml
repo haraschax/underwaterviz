@@ -12,9 +12,7 @@ jobs:
       - name: Checkout repository
       - uses: actions/checkout@v4
       - name: Install ffmpeg
-        run: |
-          sudo apt-get install ffmpeg
-
+        run: sudo apt-get install ffmpeg
       - name: Set timezone (optional)
         run: echo "TZ=America/Los_Angeles" >> $GITHUB_ENV
 
