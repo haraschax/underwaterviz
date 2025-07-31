@@ -1,0 +1,28 @@
+name: Deploy GitHub Pages
+
+# Deploy the contents of the docs/ directory to GitHub Pages whenever it changes.
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/pages.yml'
+
+jobs:
+  deploy:
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Upload the docs directory as an artifact for deployment
+      - uses: actions/upload-pages-artifact@v2
+        with:
+          path: docs
+      # Deploy to GitHub Pages
+      - uses: actions/deploy-pages@v2
+        with:
+          # Deploy from the artifact to the gh-pages branch
+          branch: gh-pages
