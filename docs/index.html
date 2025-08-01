@@ -58,6 +58,27 @@
       border: 1px solid #ddd;
       border-radius: 4px;
       box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      /* Make images clearly clickable */
+      cursor: pointer;
+    }
+
+    /* Full screen overlay for displaying enlarged images */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .overlay img {
+      max-width: 90%;
+      max-height: 90%;
     }
   </style>
 </head>
@@ -73,6 +94,96 @@
 
     const breadcrumbDiv = document.getElementById('breadcrumb');
     const contentDiv = document.getElementById('content');
+
+    // Create a reusable overlay for displaying enlarged images. The overlay
+    // stays hidden until an image is clicked. Clicking anywhere on the
+    // overlay hides it again.
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    const overlayImg = document.createElement('img');
+    overlay.appendChild(overlayImg);
+    overlay.addEventListener('click', () => {
+      overlay.style.display = 'none';
+    });
+    document.body.appendChild(overlay);
+
+    /**
+     * Show a given image in the full screen overlay.
+     *
+     * @param {string} src - The URL of the image to display
+     * @param {string} alt - Alternative text (used for accessibility)
+     */
+    function openModal(src, alt = '') {
+      overlayImg.src = src;
+      overlayImg.alt = alt;
+      overlay.style.display = 'flex';
+    }
+
+    /**
+     * Load snapshots from the past seven days and display one image per day
+     * closest to noon (12:00). Only images between 06:00 and 19:59 are
+     * considered. This section is inserted at the top of the page when
+     * loading the years listing.
+     */
+    async function loadLast7DaysImages() {
+      const today = new Date();
+      const imagesInfo = [];
+      for (let offset = 0; offset < 7; offset++) {
+        const d = new Date();
+        d.setDate(today.getDate() - offset);
+        const year = d.getFullYear().toString();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        // Attempt to fetch the directory listing for this date. If it fails
+        // (e.g. no snapshots yet), skip to the next day.
+        const items = await fetchDir(`${year}/${month}/${day}`);
+        if (!Array.isArray(items) || items.length === 0) {
+          continue;
+        }
+        // Filter to files only and within the allowed time window (06–19).
+        const files = items.filter(item => item.type === 'file');
+        const valid = files.filter(item => {
+          const name = item.name.split('.')[0];
+          const hour = parseInt(name, 10);
+          return hour >= 6 && hour < 20;
+        });
+        if (valid.length === 0) {
+          continue;
+        }
+        // Choose the file whose hour is closest to 12.
+        let chosen = valid[0];
+        let bestDiff = Math.abs(parseInt(chosen.name.split('.')[0], 10) - 12);
+        valid.forEach(item => {
+          const diff = Math.abs(parseInt(item.name.split('.')[0], 10) - 12);
+          if (diff < bestDiff) {
+            chosen = item;
+            bestDiff = diff;
+          }
+        });
+        imagesInfo.push({ year, month, day, file: chosen.name });
+      }
+      // Build the section only if we gathered at least one image.
+      if (imagesInfo.length > 0) {
+        const section = document.createElement('div');
+        const heading = document.createElement('h2');
+        heading.textContent = 'Midday images from the last 7 days';
+        heading.style.textAlign = 'center';
+        section.appendChild(heading);
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+        imagesInfo.forEach(info => {
+          const img = document.createElement('img');
+          img.src = `${rawBase}/${info.year}/${info.month}/${info.day}/${info.file}`;
+          img.alt = `${info.year}-${info.month}-${info.day}`;
+          img.title = img.alt;
+          img.addEventListener('click', () => openModal(img.src, img.alt));
+          grid.appendChild(img);
+        });
+        section.appendChild(grid);
+        // Prepend the section so it appears above the years listing.
+        contentDiv.appendChild(section);
+      }
+    }
 
     /**
      * Render breadcrumb navigation and attach click handlers to navigate
@@ -132,10 +243,16 @@
      * clickable boxes for each year.
      */
     async function loadYears() {
+      // Clear any existing content and set the breadcrumb. The content
+      // container is emptied before we append the last 7 days section and
+      // the year listing.
+      contentDiv.innerHTML = '';
       setBreadcrumb(['Years']);
+      // Show images from the last seven days at the top of the page.
+      await loadLast7DaysImages();
+      // Retrieve and display available years.
       const items = await fetchDir();
       const dirs = items.filter(item => item.type === 'dir');
-      contentDiv.innerHTML = '';
       const container = document.createElement('div');
       container.className = 'container';
       dirs.forEach(dir => {
@@ -182,7 +299,12 @@
     async function loadImages(year, month, day) {
       setBreadcrumb(['Years', year, month, day]);
       const items = await fetchDir(`${year}/${month}/${day}`);
-      const files = items.filter(item => item.type === 'file');
+      // Only show images within the allowed time window (06–19) when viewing a day.
+      const files = items.filter(item => item.type === 'file').filter(item => {
+        const name = item.name.split('.')[0];
+        const hour = parseInt(name, 10);
+        return hour >= 6 && hour < 20;
+      });
       contentDiv.innerHTML = '';
       const grid = document.createElement('div');
       grid.className = 'grid';
@@ -191,6 +313,9 @@
         // Construct a raw GitHub URL for the image file
         img.src = `${rawBase}/${year}/${month}/${day}/${file.name}`;
         img.alt = file.name;
+        img.title = `${year}-${month}-${day} ${file.name.replace(/\.png$/, '')}:00`;
+        // Clicking an image opens it in the overlay for a larger view
+        img.addEventListener('click', () => openModal(img.src, img.title));
         grid.appendChild(img);
       });
       contentDiv.appendChild(grid);
