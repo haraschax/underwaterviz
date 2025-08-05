@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scripps Pier Camera Log</title>
+  <title>Underwater Snapshot Explorer</title>
   <!-- Favicon: a simple fish icon encoded as an SVG data URI -->
   <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xNi42OSA3LjQ0YTYuOTczIDYuOTczIDAgMCAwIC0xLjY5IDQuNTZjMCAxLjc0NyAuNjQgMy4zNDUgMS42OTkgNC41NzEiIC8+PHBhdGggZD0iTTIgOS41MDRjNy43MTUgOC42NDcgMTQuNzUgMTAuMjY1IDIwIDIuNDk4Yy01LjI1IC03Ljc2MSAtMTIuMjg1IC02LjE0MiAtMjAgMi41MDQiIC8+PHBhdGggZD0iTTE4IDExdi4wMSIgLz48cGF0aCBkPSJNMTEuNSAxMC41Yy0uNjY3IDEgLS42NjcgMiAwIDMiIC8+PC9zdmc+' />
   <style>
@@ -85,7 +85,7 @@
   </style>
 </head>
 <body>
-  <h1>Scripps Pier Camera Log</h1>
+  <h1>Underwater Snapshot Explorer</h1>
   <div id="breadcrumb"></div>
   <div id="content"></div>
 
@@ -137,11 +137,6 @@
     /**
      * Fetch a directory listing from the GitHub API. Returns an array
      * of objects describing files and directories.
-V    """
-    Return a fast vectorised linear interpolator/extrapolator.
-
-    x must be 1-D, monotonically increasing.
-    """
      */
     async function fetchDir(path = '') {
       // Use sessionStorage to cache directory listings and reduce API calls.
@@ -422,7 +417,7 @@ V    """
       contentDiv.innerHTML = '';
       const grid = document.createElement('div');
       grid.className = 'grid';
-      images.forEach(info => {
+          images.forEach(info => {
         const wrapper = document.createElement('div');
         wrapper.style.position = 'relative';
         const img = document.createElement('img');
@@ -447,7 +442,43 @@ V    """
         wrapper.addEventListener('click', () => openModal(img.src, dateLabel));
         grid.appendChild(wrapper);
       });
-      contentDiv.appendChild(grid);
+          // Append the image grid to the content area
+          contentDiv.appendChild(grid);
+
+          // After the grid of images, insert an explanatory paragraph about
+          // estimating water visibility from pier pilings and water colour. This
+          // provides context for viewers looking at the monthly images. The
+          // paragraph is only added for the month view and not reused in other
+          // contexts.
+          const infoP = document.createElement('p');
+          infoP.textContent =
+            'Water visibility can be estimated from the pier pilings and water colour. ' +
+            'The closest pier piling on the right is 1.2m (4 ft) away from the camera and ' +
+            'the piling on the right back of the screen is 3.4m (11 ft). The back left ' +
+            'piling is 4.3m (14 ft) away from the camera and may only be visible when ocean ' +
+            'conditions are calm and clear (light blue water). If you can see two pier ' +
+            'pilings on the left, the farthest one is 9m (30 ft) away, and visibility rarely ' +
+            'gets this good. Below is an example of great visibility';
+          infoP.style.marginTop = '20px';
+          infoP.style.maxWidth = '800px';
+          infoP.style.marginLeft = 'auto';
+          infoP.style.marginRight = 'auto';
+          infoP.style.lineHeight = '1.4';
+          contentDiv.appendChild(infoP);
+
+          // Add an example image below the paragraph to illustrate great
+          // visibility. The image file is stored in the docs directory so it
+          // doesn't need to be fetched from an external server on every page
+          // load. The width is restricted for a cleaner layout on large
+          // screens.
+          const exampleImg = document.createElement('img');
+          exampleImg.src = 'great_visibility.png';
+          exampleImg.alt = 'Example of great underwater visibility';
+          exampleImg.style.display = 'block';
+          exampleImg.style.margin = '10px auto 30px';
+          exampleImg.style.maxWidth = '800px';
+          exampleImg.style.width = '100%';
+          contentDiv.appendChild(exampleImg);
     }
 
     /**
