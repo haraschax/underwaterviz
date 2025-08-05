@@ -48,8 +48,11 @@ HOUR="$(date +%H)"
 OUT_DIR="$BASE_DIR/$YEAR/$MONTH/$DAY"
 mkdir -p "$OUT_DIR"
 
-# Only capture a snapshot if the current hour is within the allowed range
-if [ "$HOUR" -ge "$START_HOUR" ] && [ "$HOUR" -le "$END_HOUR" ]; then
+# Only capture a snapshot if the current hour is within the allowed range.
+# Convert the HH string into a decimal number (strip leading zero) to avoid
+# octal interpretation in arithmetic contexts.
+current_hour=$((10#$HOUR))
+if (( current_hour >= START_HOUR && current_hour <= END_HOUR )); then
   STREAM_URL="https://live.hdontap.com/hls/hosb6/scripps_pier-underwater.stream/playlist.m3u8"
   OUT_FILE="$OUT_DIR/$HOUR.png"
   ffmpeg -y -loglevel error -i "$STREAM_URL" -frames:v 1 -f image2 "$OUT_FILE"
@@ -65,7 +68,9 @@ find "$BASE_DIR" -type f -name '*.png' | while read -r file; do
   fname="$(basename "$file" .png)"
   # If the filename isn't purely numeric, skip it
   if [[ "$fname" =~ ^[0-9]{1,2}$ ]]; then
-    if [ "$fname" -lt "$START_HOUR" ] || [ "$fname" -gt "$END_HOUR" ]; then
+    # Strip any leading zero to avoid octal interpretation
+    hour_num=$((10#$fname))
+    if (( hour_num < START_HOUR || hour_num > END_HOUR )); then
       rm -f "$file"
     fi
   fi
@@ -92,15 +97,21 @@ for offset in {0..6}; do
       hour="$(basename "$img" .png)"
       # Skip if not numeric
       if ! [[ "$hour" =~ ^[0-9]{1,2}$ ]]; then continue; fi
+      # Convert to decimal to avoid octal interpretation
+      hour_num=$((10#$hour))
       # Check time window
-      if [ "$hour" -lt "$START_HOUR" ] || [ "$hour" -gt "$END_HOUR" ]; then
+      if (( hour_num < START_HOUR || hour_num > END_HOUR )); then
         continue
       fi
       # Compute absolute difference from noon (12)
-      diff=$(( hour > 12 ? hour - 12 : 12 - hour ))
-      if [ "$diff" -lt "$best_diff" ]; then
+      if (( hour_num > 12 )); then
+        diff=$(( hour_num - 12 ))
+      else
+        diff=$(( 12 - hour_num ))
+      fi
+      if (( diff < best_diff )); then
         best_file="$img"
-        best_diff="$diff"
+        best_diff=$diff
       fi
     done
     if [ -n "$best_file" ]; then
