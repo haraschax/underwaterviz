@@ -49,7 +49,8 @@
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      /* Increase minimum cell width to make images larger on desktop */
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 10px;
     }
     .grid img {
@@ -60,23 +61,8 @@
       box-shadow: 0 1px 2px rgba(0,0,0,0.1);
       cursor: pointer;
     }
-    /* Full screen overlay for displaying enlarged images */
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.8);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    .overlay img {
-      max-width: 90%;
-      max-height: 90%;
-    }
+    /* Overlay styles have been removed because the image enlargement functionality
+       has been disabled for better mobile scrolling performance. */
   </style>
 </head>
 <body>
@@ -104,42 +90,53 @@
     let currentYear = null;
     let currentMonth = null;
 
-    // Create a reusable overlay for displaying enlarged images. The overlay
-    // stays hidden until an image is clicked. Clicking anywhere on the
-    // overlay hides it again.
-    const overlay = document.createElement('div');
-    overlay.className = 'overlay';
-    const overlayImg = document.createElement('img');
-    overlay.appendChild(overlayImg);
-    overlay.addEventListener('click', () => {
-      overlay.style.display = 'none';
-    });
-    document.body.appendChild(overlay);
-
-    /**
-     * Show a given image in the full screen overlay.
-     *
-     * @param {string} src - The URL of the image to display
-     * @param {string} alt - Alternative text (used for accessibility)
-     */
-    function openModal(src, alt = '') {
-      overlayImg.src = src;
-      overlayImg.alt = alt;
-      overlay.style.display = 'flex';
-    }
+    // The overlay and modal functionality used to enlarge images on click has
+    // been removed. On mobile devices, this caused scrolling issues when
+    // images were expanded. As a result, clicking an image now does
+    // nothing beyond highlighting it.
 
     /**
      * Fetch a directory listing from the GitHub API. Returns an array
      * of objects describing files and directories.
      */
     async function fetchDir(path = '') {
+      // Use sessionStorage to cache directory listings and reduce API calls.
+      // Rate limiting on GitHub can be hit if too many unauthenticated
+      // requests are made in a short period. Cached entries expire after
+      // one hour.
+      const cacheKey = path || 'root';
+      try {
+        const cachedRaw = sessionStorage.getItem(`uw_cache_${cacheKey}`);
+        if (cachedRaw) {
+          try {
+            const cached = JSON.parse(cachedRaw);
+            const oneHour = 60 * 60 * 1000;
+            if (Date.now() - cached.time < oneHour) {
+              return cached.data;
+            }
+            // Expired; remove.
+            sessionStorage.removeItem(`uw_cache_${cacheKey}`);
+          } catch (e) {
+            // If parsing fails, remove corrupted cache entry.
+            sessionStorage.removeItem(`uw_cache_${cacheKey}`);
+          }
+        }
+      } catch (e) {
+        // If sessionStorage is not available or other errors, fall through
+      }
       try {
         const url = path ? `${apiBase}/${path}` : apiBase;
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Failed to fetch ${url}: ${response.status}`);
         }
-        return await response.json();
+        const data = await response.json();
+        try {
+          sessionStorage.setItem(`uw_cache_${cacheKey}`, JSON.stringify({ data, time: Date.now() }));
+        } catch (e) {
+          // If sessionStorage quota exceeded or unavailable, ignore.
+        }
+        return data;
       } catch (err) {
         console.error(err);
         return [];
@@ -268,7 +265,7 @@
           label.style.backgroundColor = 'rgba(0,0,0,0.5)';
           wrapper.appendChild(img);
           wrapper.appendChild(label);
-          wrapper.addEventListener('click', () => openModal(img.src, dateLabel));
+          // No enlargement on click; just show the static image.
           grid.appendChild(wrapper);
         });
         section.appendChild(grid);
@@ -284,6 +281,13 @@
      */
     async function loadAllMonths() {
       contentDiv.innerHTML = '';
+      // Update browser history to reflect the months view. When this view is
+      // loaded, pressing the back button will return here instead of leaving
+      // the site. Use replaceState to avoid stacking multiple identical
+      // entries on repeated calls.
+      if (!history.state || history.state.view !== 'months') {
+        history.replaceState({ view: 'months' }, '', '');
+      }
       setBreadcrumb(['Months']);
       await loadLast7DaysImages();
       const heading = document.createElement('h2');
@@ -302,7 +306,7 @@
         monthDirs.forEach(dir => {
           const monthNum = parseInt(dir.name, 10);
           const displayName = `${monthNames[monthNum - 1]} ${year}`;
-          container.appendChild(createItem(displayName, () => loadDays(year, dir.name)));
+          container.appendChild(createItem(displayName, () => loadDays(year, dir.name, true)));
         });
       }
       contentDiv.appendChild(container);
@@ -323,7 +327,7 @@
       dirs.forEach(dir => {
         const monthNum = parseInt(dir.name, 10);
         const displayName = `${monthNames[monthNum - 1]} ${year}`;
-        container.appendChild(createItem(displayName, () => loadDays(year, dir.name)));
+        container.appendChild(createItem(displayName, () => loadDays(year, dir.name, true)));
       });
       contentDiv.appendChild(container);
     }
@@ -334,10 +338,18 @@
      * allowed time window (06:00–19:59) are shown, and each image is
      * annotated with its date and time in red.
      */
-    async function loadDays(year, month) {
+    async function loadDays(year, month, pushHistory = false) {
       // Track the current year and month for breadcrumb navigation
       currentYear = year;
       currentMonth = month;
+      // If requested, push a new history entry so that the back button
+      // returns to the months view instead of the previous website. Only
+      // push when navigating via user interaction (e.g. clicking a month),
+      // not when redrawing the month due to breadcrumb navigation or
+      // popstate events.
+      if (pushHistory) {
+        history.pushState({ view: 'month', year, month }, '', '');
+      }
       const monthDisplay = `${monthNames[parseInt(month, 10) - 1]} ${year}`;
       setBreadcrumb(['Months', monthDisplay]);
       const items = await fetchDir(`${year}/${month}`);
@@ -386,7 +398,7 @@
         label.style.backgroundColor = 'rgba(0,0,0,0.5)';
         wrapper.appendChild(img);
         wrapper.appendChild(label);
-        wrapper.addEventListener('click', () => openModal(img.src, dateLabel));
+        // Removed click-to-enlarge handler for better mobile experience.
         grid.appendChild(wrapper);
       });
       contentDiv.appendChild(grid);
@@ -431,7 +443,7 @@
         label.style.backgroundColor = 'rgba(0,0,0,0.5)';
         wrapper.appendChild(img);
         wrapper.appendChild(label);
-        wrapper.addEventListener('click', () => openModal(img.src, dateLabel));
+        // Removed click handler; images no longer open in a modal.
         grid.appendChild(wrapper);
       });
       contentDiv.appendChild(grid);
@@ -454,6 +466,20 @@
       });
       contentDiv.appendChild(container);
     }
+
+    // Initialise by loading all months
+    // Handle browser back/forward navigation. When the history state
+    // changes (e.g. via the browser back button), reload the appropriate
+    // view based on the stored state. If no state is present, default
+    // to the months overview.
+    window.addEventListener('popstate', (event) => {
+      const state = event.state;
+      if (!state || !state.view || state.view === 'months') {
+        loadAllMonths();
+      } else if (state.view === 'month') {
+        loadDays(state.year, state.month);
+      }
+    });
 
     // Initialise by loading all months
     loadAllMonths();
