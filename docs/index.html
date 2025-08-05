@@ -386,6 +386,16 @@
       infoP.appendChild(link);
 
       infoP.append(
+        '. This website is completely open-source, feel free to contribute: '
+      );
+      const link2 = document.createElement('a');
+      link2.href = 'https://github.com/haraschax/underwaterviz';
+      link2.textContent = 'https://github.com/haraschax/underwaterviz';
+      link2.target = '_blank';
+      link2.rel = 'noopener noreferrer';
+      infoP.appendChild(link2);
+
+      infoP.append(
         '. The underwater cam is a great tool to estimate underwater visibility in La Jolla for snorkeling or diving.',
         document.createElement('br'),
         document.createElement('br'),
