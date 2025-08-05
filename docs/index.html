@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Underwater Snapshot Explorer</title>
+  <!-- Favicon: a simple fish icon encoded as an SVG data URI -->
+  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xNi42OSA3LjQ0YTYuOTczIDYuOTczIDAgMCAwIC0xLjY5IDQuNTZjMCAxLjc0NyAuNjQgMy4zNDUgMS42OTkgNC41NzEiIC8+PHBhdGggZD0iTTIgOS41MDRjNy43MTUgOC42NDcgMTQuNzUgMTAuMjY1IDIwIDIuNDk4Yy01LjI1IC03Ljc2MSAtMTIuMjg1IC02LjE0MiAtMjAgMi41MDQiIC8+PHBhdGggZD0iTTE4IDExdi4wMSIgLz48cGF0aCBkPSJNMTEuNSAxMC41Yy0uNjY3IDEgLS42NjcgMiAwIDMiIC8+PC9zdmc+' />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -61,6 +63,23 @@
       box-shadow: 0 1px 2px rgba(0,0,0,0.1);
       cursor: pointer;
     }
+    /* Full screen overlay for displaying enlarged images */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .overlay img {
+      max-width: 90%;
+      max-height: 90%;
+    }
     /* Overlay styles have been removed because the image enlargement functionality
        has been disabled for better mobile scrolling performance. */
   </style>
@@ -90,10 +109,30 @@
     let currentYear = null;
     let currentMonth = null;
 
-    // The overlay and modal functionality used to enlarge images on click has
-    // been removed. On mobile devices, this caused scrolling issues when
-    // images were expanded. As a result, clicking an image now does
-    // nothing beyond highlighting it.
+    // Create an overlay and modal functionality for enlarging images. Clicking
+    // on any image will display it full screen. Clicking the overlay
+    // dismisses it. This feature was previously removed for mobile due to
+    // scrolling issues, but has been reinstated per user request.
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    const overlayImg = document.createElement('img');
+    overlay.appendChild(overlayImg);
+    overlay.addEventListener('click', () => {
+      overlay.style.display = 'none';
+    });
+    document.body.appendChild(overlay);
+
+    /**
+     * Show a given image in the full screen overlay.
+     *
+     * @param {string} src - The URL of the image to display
+     * @param {string} alt - Alternative text (used for accessibility)
+     */
+    function openModal(src, alt = '') {
+      overlayImg.src = src;
+      overlayImg.alt = alt;
+      overlay.style.display = 'flex';
+    }
 
     /**
      * Fetch a directory listing from the GitHub API. Returns an array
@@ -245,6 +284,8 @@
           label.style.backgroundColor = 'rgba(0,0,0,0.5)';
           wrapper.appendChild(img);
           wrapper.appendChild(label);
+          // Enlarge image on click via the modal overlay
+          wrapper.addEventListener('click', () => openModal(img.src, dateLabel));
           grid.appendChild(wrapper);
         });
         section.appendChild(grid);
@@ -397,7 +438,8 @@
         label.style.backgroundColor = 'rgba(0,0,0,0.5)';
         wrapper.appendChild(img);
         wrapper.appendChild(label);
-        // Removed click-to-enlarge handler for better mobile experience.
+        // Enlarge image on click via the modal overlay
+        wrapper.addEventListener('click', () => openModal(img.src, dateLabel));
         grid.appendChild(wrapper);
       });
       contentDiv.appendChild(grid);
@@ -442,7 +484,8 @@
         label.style.backgroundColor = 'rgba(0,0,0,0.5)';
         wrapper.appendChild(img);
         wrapper.appendChild(label);
-        // Removed click handler; images no longer open in a modal.
+        // Enlarge image on click via the modal overlay
+        wrapper.addEventListener('click', () => openModal(img.src, dateLabel));
         grid.appendChild(wrapper);
       });
       contentDiv.appendChild(grid);
