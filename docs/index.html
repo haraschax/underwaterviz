@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Underwater Snapshot Explorer</title>
+  <title>Scripps Pier Camera Log</title>
   <!-- Favicon: a simple fish icon encoded as an SVG data URI -->
   <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xNi42OSA3LjQ0YTYuOTczIDYuOTczIDAgMCAwIC0xLjY5IDQuNTZjMCAxLjc0NyAuNjQgMy4zNDUgMS42OTkgNC41NzEiIC8+PHBhdGggZD0iTTIgOS41MDRjNy43MTUgOC42NDcgMTQuNzUgMTAuMjY1IDIwIDIuNDk4Yy01LjI1IC03Ljc2MSAtMTIuMjg1IC02LjE0MiAtMjAgMi41MDQiIC8+PHBhdGggZD0iTTE4IDExdi4wMSIgLz48cGF0aCBkPSJNMTEuNSAxMC41Yy0uNjY3IDEgLS42NjcgMiAwIDMiIC8+PC9zdmc+' />
   <style>
@@ -85,7 +85,7 @@
   </style>
 </head>
 <body>
-  <h1>Underwater Snapshot Explorer</h1>
+  <h1>Scripps Pier Camera Log</h1>
   <div id="breadcrumb"></div>
   <div id="content"></div>
 
@@ -137,6 +137,11 @@
     /**
      * Fetch a directory listing from the GitHub API. Returns an array
      * of objects describing files and directories.
+V    """
+    Return a fast vectorised linear interpolator/extrapolator.
+
+    x must be 1-D, monotonically increasing.
+    """
      */
     async function fetchDir(path = '') {
       // Use sessionStorage to cache directory listings and reduce API calls.
