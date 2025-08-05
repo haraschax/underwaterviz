@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scripps pier underwater cam logs</title>
+  <title>Underwater Snapshot Explorer</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -155,14 +155,14 @@
         span.textContent = part;
         span.addEventListener('click', () => {
           /**
-           * Handle breadcrumb navigation. The site primarily operates in a
-           * flattened months view ("Months" → "<MonthName> <Year>"). When
-           * operating in this view, only two crumb levels exist. Clicking
-           * the first crumb returns to the top-level months view; clicking
+          * Handle breadcrumb navigation. The site primarily operates in a
+           * flattened months view labelled as "Home" → "<MonthName> <Year>".
+           * When operating in this view, only two crumb levels exist.
+           * Clicking the first crumb returns to the top-level months view; clicking
            * the second crumb reloads the month. A legacy "Years" view
            * remains for backward compatibility but is not used by default.
            */
-          if (parts[0] === 'Months') {
+          if (parts[0] === 'Home') {
             if (idx === 0) {
               // Return to the list of all months
               loadAllMonths();
@@ -204,39 +204,19 @@
      * considered. Each image is overlayed with its date and time in red.
      */
     async function loadLast7DaysImages() {
-      const today = new Date();
-      const imagesInfo = [];
-      for (let offset = 0; offset < 7; offset++) {
-        const d = new Date();
-        d.setDate(today.getDate() - offset);
-        const year = d.getFullYear().toString();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        const items = await fetchDir(`${year}/${month}/${day}`);
-        if (!Array.isArray(items) || items.length === 0) {
-          continue;
+      // Fetch the pre‑generated list of highlight images from the server. The
+      // grab_snapshot script populates docs/last7days/last7days.json with
+      // metadata for the last seven days. This removes the need for the
+      // client to perform time‑window logic or multiple API requests.
+      try {
+        const response = await fetch('last7days/last7days.json');
+        if (!response.ok) {
+          return;
         }
-        const files = items.filter(item => item.type === 'file');
-        const valid = files.filter(item => {
-          const name = item.name.split('.')[0];
-          const hour = parseInt(name, 10);
-          return hour >= 6 && hour < 20;
-        });
-        if (valid.length === 0) {
-          continue;
+        const imagesInfo = await response.json();
+        if (!Array.isArray(imagesInfo) || imagesInfo.length === 0) {
+          return;
         }
-        let chosen = valid[0];
-        let bestDiff = Math.abs(parseInt(chosen.name.split('.')[0], 10) - 12);
-        valid.forEach(item => {
-          const diff = Math.abs(parseInt(item.name.split('.')[0], 10) - 12);
-          if (diff < bestDiff) {
-            chosen = item;
-            bestDiff = diff;
-          }
-        });
-        imagesInfo.push({ year, month, day, file: chosen.name });
-      }
-      if (imagesInfo.length > 0) {
         const section = document.createElement('div');
         const heading = document.createElement('h2');
         heading.textContent = 'Midday images from the last 7 days';
@@ -248,9 +228,9 @@
           const wrapper = document.createElement('div');
           wrapper.style.position = 'relative';
           const img = document.createElement('img');
-          img.src = `${rawBase}/${info.year}/${info.month}/${info.day}/${info.file}`;
-          const hourStr = info.file.split('.')[0].padStart(2, '0');
-          const dateLabel = `${info.year}-${info.month}-${info.day} ${hourStr}:00`;
+          // Images are stored in docs/last7days relative to this page
+          img.src = `last7days/${info.file}`;
+          const dateLabel = `${info.date} ${info.time.padStart(2, '0')}:00`;
           img.alt = dateLabel;
           img.title = dateLabel;
           img.style.display = 'block';
@@ -265,11 +245,12 @@
           label.style.backgroundColor = 'rgba(0,0,0,0.5)';
           wrapper.appendChild(img);
           wrapper.appendChild(label);
-          // No enlargement on click; just show the static image.
           grid.appendChild(wrapper);
         });
         section.appendChild(grid);
         contentDiv.appendChild(section);
+      } catch (err) {
+        console.error(err);
       }
     }
 
@@ -286,30 +267,48 @@
       // the site. Use replaceState to avoid stacking multiple identical
       // entries on repeated calls.
       if (!history.state || history.state.view !== 'months') {
+        // Retain the internal view name "months" for backward
+        // compatibility, but the breadcrumb label is "Home".
         history.replaceState({ view: 'months' }, '', '');
       }
-      setBreadcrumb(['Months']);
+      setBreadcrumb(['Home']);
       await loadLast7DaysImages();
       const heading = document.createElement('h2');
       heading.textContent = 'Browse historical pictures';
       heading.style.textAlign = 'center';
       heading.style.marginTop = '20px';
       contentDiv.appendChild(heading);
-      const items = await fetchDir();
-      const years = items.filter(item => item.type === 'dir');
-      const container = document.createElement('div');
-      container.className = 'container';
-      for (const yearObj of years) {
-        const year = yearObj.name;
-        const months = await fetchDir(year);
-        const monthDirs = months.filter(item => item.type === 'dir');
-        monthDirs.forEach(dir => {
-          const monthNum = parseInt(dir.name, 10);
-          const displayName = `${monthNames[monthNum - 1]} ${year}`;
-          container.appendChild(createItem(displayName, () => loadDays(year, dir.name, true)));
+      // Fetch the months manifest generated by grab_snapshot.sh. This JSON file
+      // lists all year/month combinations that contain at least one snapshot.
+      try {
+        const response = await fetch('months.json');
+        if (!response.ok) {
+          throw new Error('Failed to load months manifest');
+        }
+        const monthsList = await response.json();
+        if (!Array.isArray(monthsList)) {
+          throw new Error('Invalid months manifest');
+        }
+        // Sort months descending by year then month for a logical ordering
+        monthsList.sort((a, b) => {
+          const ya = parseInt(a.year, 10);
+          const yb = parseInt(b.year, 10);
+          if (ya !== yb) return yb - ya;
+          const ma = parseInt(a.month, 10);
+          const mb = parseInt(b.month, 10);
+          return mb - ma;
         });
+        const container = document.createElement('div');
+        container.className = 'container';
+        monthsList.forEach(entry => {
+          const mNum = parseInt(entry.month, 10);
+          const displayName = `${monthNames[mNum - 1]} ${entry.year}`;
+          container.appendChild(createItem(displayName, () => loadDays(entry.year, entry.month, true)));
+        });
+        contentDiv.appendChild(container);
+      } catch (err) {
+        console.error(err);
       }
-      contentDiv.appendChild(container);
     }
 
     /**
@@ -351,7 +350,7 @@
         history.pushState({ view: 'month', year, month }, '', '');
       }
       const monthDisplay = `${monthNames[parseInt(month, 10) - 1]} ${year}`;
-      setBreadcrumb(['Months', monthDisplay]);
+      setBreadcrumb(['Home', monthDisplay]);
       const items = await fetchDir(`${year}/${month}`);
       const dayDirs = items.filter(item => item.type === 'dir');
       const images = [];
@@ -413,7 +412,7 @@
       currentYear = year;
       currentMonth = month;
       const monthDisplay = `${monthNames[parseInt(month, 10) - 1]} ${year}`;
-      setBreadcrumb(['Months', monthDisplay, day]);
+      setBreadcrumb(['Home', monthDisplay, day]);
       const items = await fetchDir(`${year}/${month}/${day}`);
       const files = items.filter(item => item.type === 'file').filter(item => {
         const hour = parseInt(item.name.split('.')[0], 10);
