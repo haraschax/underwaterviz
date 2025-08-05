@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Underwater Snapshot Explorer</title>
+  <title>Scripps Underwater Camera Log</title>
   <!-- Favicon: a simple fish icon encoded as an SVG data URI -->
   <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xNi42OSA3LjQ0YTYuOTczIDYuOTczIDAgMCAwIC0xLjY5IDQuNTZjMCAxLjc0NyAuNjQgMy4zNDUgMS42OTkgNC41NzEiIC8+PHBhdGggZD0iTTIgOS41MDRjNy43MTUgOC42NDcgMTQuNzUgMTAuMjY1IDIwIDIuNDk4Yy01LjI1IC03Ljc2MSAtMTIuMjg1IC02LjE0MiAtMjAgMi41MDQiIC8+PHBhdGggZD0iTTE4IDExdi4wMSIgLz48cGF0aCBkPSJNMTEuNSAxMC41Yy0uNjY3IDEgLS42NjcgMiAwIDMiIC8+PC9zdmc+' />
   <style>
@@ -85,7 +85,7 @@
   </style>
 </head>
 <body>
-  <h1>Underwater Snapshot Explorer</h1>
+  <h1>Scripps Underwater Camera Log</h1>
   <div id="breadcrumb"></div>
   <div id="content"></div>
 
@@ -355,24 +355,49 @@
         const msg = document.createElement('p');
         msg.textContent = 'No historical images are available.';
         msg.style.textAlign = 'center';
-        msg.style.marginTop = '20px';
+        msg.style.marginTop = '15px';
         contentDiv.appendChild(msg);
       }
+     
+ 
+      const heading2 = document.createElement('h2');
+      heading2.textContent = 'The Scripps Underwater Cam';
+      heading2.style.textAlign = 'center';
+      heading2.style.marginTop = '18px';
+      contentDiv.appendChild(heading2);
 
        // Insert a paragraph describing how to estimate water visibility and an
       // accompanying example image underneath the heading. This text provides
       // context for viewers browsing the historical snapshots. The image is
       // stored locally in the docs folder so it is always available, even
       // when the page is opened directly from the file system.
+
       const infoP = document.createElement('p');
-      infoP.textContent =
-        'Water visibility can be estimated from the pier pilings and water colour. ' +
-        'The closest pier piling on the right is 1.2m (4 ft) away from the camera and ' +
-        'the piling on the right back of the screen is 3.4m (11 ft). The back left ' +
-        'piling is 4.3m (14 ft) away from the camera and may only be visible when ocean ' +
-        'conditions are calm and clear (light blue water). If you can see two pier ' +
-        'pilings on the left, the farthest one is 9m (30 ft) away, and visibility rarely ' +
-        'gets this good. Below is an example of great visibility';
+
+      infoP.append(
+        'This website is just a historical log of the Scripps Pier Underwater Camera: '
+      );
+
+      const link = document.createElement('a');
+      link.href = 'https://coollab.ucsd.edu/pierviz/';
+      link.textContent = 'https://coollab.ucsd.edu/pierviz/';
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      infoP.appendChild(link);
+
+      infoP.append(
+        '. The underwater cam is a great tool to estimate underwater visibility in La Jolla for snorkeling or diving.',
+        document.createElement('br'),
+        document.createElement('br'),
+        'Water visibility can be estimated from the pier pilings and water colour.',
+        'The closest pier piling on the right is 1.2m (4 ft) away from the camera and ',
+        'the piling on the right back of the screen is 3.4m (11 ft). The back left ',
+        'piling is 4.3m (14 ft) away from the camera and may only be visible when ocean ',
+        'conditions are calm and clear (light blue water). If you can see two pier ',
+        'pilings on the left, the farthest one is 9m (30 ft) away, and visibility rarely ',
+        'gets this good. Below is an example of great visibility:',
+      );
+
       infoP.style.marginTop = '20px';
       infoP.style.maxWidth = '800px';
       infoP.style.marginLeft = 'auto';
