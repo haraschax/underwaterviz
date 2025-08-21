@@ -53,10 +53,26 @@ mkdir -p "$OUT_DIR"
 # octal interpretation in arithmetic contexts.
 current_hour=$((10#$HOUR))
 if (( current_hour >= START_HOUR && current_hour <= END_HOUR )); then
-  STREAM_URL="https://live.hdontap.com/hls/hosb6/scripps_pier-underwater.stream/playlist.m3u8"
-  OUT_FILE="$OUT_DIR/$HOUR.png"
-  ffmpeg -y -loglevel error -i "$STREAM_URL" -frames:v 1 -f image2 "$OUT_FILE"
-  echo "Saved snapshot to $OUT_FILE"
+  
+	
+  export STREAM_URL="$(
+  grep -oP '"streamSrc":\s*"\K[^"]+' <<'HTML'
+<script id="player-data" type="application/json">{"ads": {"countdown": false, "enableMidroll": false, "enablePreroll": false, "midrollOffset": false, "midrollRepeat": false, "prerollCountdown": false}, "host": "https://portal.hdontap.com/s/embed", "overlay": {"url": "https://coollab.ucsd.edu/pierviz/", "type": "responsive", "image": "https://portal.hdontap.com/backend/files/upload_e50911e3c5e73674382e7931769f3694.png", "xSize": 50, "margin": 0, "offsetX": 0, "offsetY": 0, "opacity": 100, "maxWidth": 500, "position": 3, "responsive": true}, "branding": {"text": "Live Cams", "target": "//hdontap.com/cams"}, "audioMute": true, "autoStart": true, "discovery": {"title": "Nearby Cams", "thumbnails": [{"img": "https://portal.hdontap.com/snapshot/hotel_la_jolla-ptz_cam-CUST-multicam", "url": "https://hdontap.com/stream/449923/la-jolla-shores-overlook-live-cam/?utm_source=hdontap.com\u0026utm_medium=discoverygrid\u0026utm_campaign=hdot+scripps_pier_underwater", "title": "La Jolla Shores Overlook Cam"}]}, "streamSrc": "https://live.hdontap.com/hls/hosb6lo/scripps_pier-underwater.stream/playlist.m3u8?mt=s3EyxJxwK9dEiiyTKa83jA\u0026e=1755736555", "toolbarLogo": {"enabled": true, "targetURL": "https://hdontap.com?utm_source=HDOnTap_Player\u0026utm_medium=toolbar_logo\u0026utm_campaign=customer_embed+scripps_pier-underwater-HDOT"}}</script>
+HTML
+)"
+  # unescape \u0026 -> &
+
+  echo "STREAM_URL=$STREAM_URL"	
+  if [[ -n "$STREAM_URL" ]]; then
+    OUT_FILE="$OUT_DIR/$HOUR.png"
+    # Capture one frame from the current stream URL
+    ffmpeg -y -loglevel error -i "$STREAM_URL" -frames:v 1 -f image2 "$OUT_FILE"
+    echo "Saved snapshot to $OUT_FILE"
+  else
+    echo "Warning: failed to extract stream URL from embed page; snapshot not saved."
+  fi
+
+
 else
   echo "Current hour $HOUR is outside the allowed time window ($START_HOUR-$END_HOUR); snapshot not saved."
 fi
