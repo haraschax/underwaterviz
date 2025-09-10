@@ -55,7 +55,7 @@ current_hour=$((10#$HOUR))
 if (( current_hour >= START_HOUR && current_hour <= END_HOUR )); then
 
   EMBED_URL="https://portal.hdontap.com/s/embed/?streamKey=scripps_pier-underwater"
-  STREAM_URL=$(curl -fsSL "$EMBED_URL" | grep -oP '"streamSrc":"\K[^"]+')
+  STREAM_URL=$(curl -fsSL -H 'User-Agent: Mozilla/5.0' "$EMBED_URL" | grep -oP '"streamSrc":"\K[^"]+')
   printf -v STREAM_URL '%b' "$STREAM_URL"
   echo "STREAM_URL=$STREAM_URL"
   if [[ -n "$STREAM_URL" ]]; then
