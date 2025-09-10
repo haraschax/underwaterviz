@@ -70,12 +70,15 @@ if (( current_hour >= START_HOUR && current_hour <= END_HOUR )); then
       echo "Error: failed to fetch embed page from $EMBED_URL (curl exit $curl_status)" >&2
       exit 1
     fi
-    STREAM_URL=$(echo "$embed_page" | grep -oP '"streamSrc":"\K[^"]+' || true)
+    # Extract the first HLS (.m3u8) URL from the embed page. The stream URL
+    # appears URL-escaped (e.g. "https:\/\/...") so we unescape any
+    # backslashes after matching.
+    STREAM_URL=$(echo "$embed_page" | grep -oP 'https:\\/\\/[^"\n]+?m3u8' | head -n 1 || true)
     if [[ -z "$STREAM_URL" ]]; then
       echo "Error: stream URL not found in embed page" >&2
       exit 1
     fi
-    printf -v STREAM_URL '%b' "$STREAM_URL"
+    STREAM_URL="${STREAM_URL//\\/}"
   fi
 
   echo "STREAM_URL=$STREAM_URL"
