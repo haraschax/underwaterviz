@@ -18,6 +18,17 @@ jobs:
           fetch-depth: 0
       - name: Set timezone (optional)
         run: echo "TZ=America/Los_Angeles" >> $GITHUB_ENV
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install Python dependencies
+        run: pip install selenium
+      - name: Set up Chrome and Chromedriver
+        uses: browser-actions/setup-chrome@v2
+        with:
+          install-chromedriver: true
+          install-dependencies: true
       - name: Run snapshot script
         run: python grab_snapshot.py
       - name: Commit and push changes
