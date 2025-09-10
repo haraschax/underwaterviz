@@ -53,25 +53,24 @@ mkdir -p "$OUT_DIR"
 # octal interpretation in arithmetic contexts.
 current_hour=$((10#$HOUR))
 if (( current_hour >= START_HOUR && current_hour <= END_HOUR )); then
-  
-	
-  export STREAM_URL="$(
-  grep -oP '"streamSrc":\s*"\K[^"]+' <<'HTML'
-<script id="player-data" type="application/json">{"ads": {"countdown": false, "enableMidroll": false, "enablePreroll": false, "midrollOffset": false, "midrollRepeat": false, "prerollCountdown": false}, "host": "https://portal.hdontap.com/s/embed", "overlay": {"url": "https://coollab.ucsd.edu/pierviz/", "type": "responsive", "image": "https://portal.hdontap.com/backend/files/upload_e50911e3c5e73674382e7931769f3694.png", "xSize": 50, "margin": 0, "offsetX": 0, "offsetY": 0, "opacity": 100, "maxWidth": 500, "position": 3, "responsive": true}, "branding": {"text": "Live Cams", "target": "//hdontap.com/cams"}, "audioMute": true, "autoStart": true, "discovery": {"title": "Nearby Cams", "thumbnails": [{"img": "https://portal.hdontap.com/snapshot/hotel_la_jolla-ptz_cam-CUST-multicam", "url": "https://hdontap.com/stream/449923/la-jolla-shores-overlook-live-cam/?utm_source=hdontap.com\u0026utm_medium=discoverygrid\u0026utm_campaign=hdot+scripps_pier_underwater", "title": "La Jolla Shores Overlook Cam"}]}, "streamSrc": "https://live.hdontap.com/hls/hosb6lo/scripps_pier-underwater.stream/playlist.m3u8?mt=s3EyxJxwK9dEiiyTKa83jA\u0026e=1755736555", "toolbarLogo": {"enabled": true, "targetURL": "https://hdontap.com?utm_source=HDOnTap_Player\u0026utm_medium=toolbar_logo\u0026utm_campaign=customer_embed+scripps_pier-underwater-HDOT"}}</script>
-HTML
-)"
-  # unescape \u0026 -> &
 
-  echo "STREAM_URL=$STREAM_URL"	
+  EMBED_URL="https://portal.hdontap.com/s/embed/?streamKey=scripps_pier-underwater"
+  STREAM_URL=$(curl -fsSL -H 'User-Agent: Mozilla/5.0' "$EMBED_URL" | grep -oP '"streamSrc":"\K[^"]+')
+  printf -v STREAM_URL '%b' "$STREAM_URL"
+  echo "STREAM_URL=$STREAM_URL"
   if [[ -n "$STREAM_URL" ]]; then
     OUT_FILE="$OUT_DIR/$HOUR.png"
     # Capture one frame from the current stream URL
     ffmpeg -y -loglevel error -i "$STREAM_URL" -frames:v 1 -f image2 "$OUT_FILE"
-    echo "Saved snapshot to $OUT_FILE"
+    if [[ -s "$OUT_FILE" ]]; then
+      echo "Saved snapshot to $OUT_FILE"
+    else
+      echo "Error: snapshot not saved to $OUT_FILE" >&2
+      exit 1
+    fi
   else
-    echo "Warning: failed to extract stream URL from embed page; snapshot not saved."
+    echo "Warning: failed to fetch stream URL from embed page; snapshot not saved."
   fi
-
 
 else
   echo "Current hour $HOUR is outside the allowed time window ($START_HOUR-$END_HOUR); snapshot not saved."
@@ -120,11 +119,7 @@ for offset in {0..6}; do
         continue
       fi
       # Compute absolute difference from noon (12)
-      if (( hour_num > 12 )); then
-        diff=$(( hour_num - 12 ))
-      else
-        diff=$(( 12 - hour_num ))
-      fi
+      diff=$(( hour_num > 12 ? hour_num - 12 : 12 - hour_num ))
       if (( diff < best_diff )); then
         best_file="$img"
         best_diff=$diff
