@@ -19,9 +19,7 @@ jobs:
       - name: Set timezone (optional)
         run: echo "TZ=America/Los_Angeles" >> $GITHUB_ENV
       - name: Run snapshot script
-        run: |
-          chmod +x ./grab_snapshot.sh
-          ./grab_snapshot.sh
+        run: python grab_snapshot.py
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
