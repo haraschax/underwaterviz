@@ -55,21 +55,41 @@ current_hour=$((10#$HOUR))
 if (( current_hour >= START_HOUR && current_hour <= END_HOUR )); then
 
   EMBED_URL="https://portal.hdontap.com/s/embed/?streamKey=scripps_pier-underwater"
-  STREAM_URL=$(curl -fsSL -H 'User-Agent: Mozilla/5.0' "$EMBED_URL" | grep -oP '"streamSrc":"\K[^"]+')
-  printf -v STREAM_URL '%b' "$STREAM_URL"
+
+  if [[ -n "${STREAM_URL_OVERRIDE:-}" ]]; then
+    STREAM_URL="$STREAM_URL_OVERRIDE"
+    echo "Using STREAM_URL_OVERRIDE"
+  else
+    set +e
+    embed_page=$(curl -fsSL -H 'User-Agent: Mozilla/5.0' "$EMBED_URL")
+    curl_status=$?
+    set -e
+    if [[ $curl_status -ne 0 ]]; then
+      echo "Error: failed to fetch embed page from $EMBED_URL (curl exit $curl_status)" >&2
+      exit 1
+    fi
+    STREAM_URL=$(echo "$embed_page" | grep -oP '"streamSrc":"\K[^"]+')
+    printf -v STREAM_URL '%b' "$STREAM_URL"
+  fi
+
   echo "STREAM_URL=$STREAM_URL"
   if [[ -n "$STREAM_URL" ]]; then
     OUT_FILE="$OUT_DIR/$HOUR.png"
     # Capture one frame from the current stream URL
-    ffmpeg -y -loglevel error -i "$STREAM_URL" -frames:v 1 -f image2 "$OUT_FILE"
-    if [[ -s "$OUT_FILE" ]]; then
-      echo "Saved snapshot to $OUT_FILE"
+    if ffmpeg -y -loglevel error -i "$STREAM_URL" -frames:v 1 -f image2 "$OUT_FILE"; then
+      if [[ -s "$OUT_FILE" ]]; then
+        echo "Saved snapshot to $OUT_FILE"
+      else
+        echo "Error: snapshot not saved to $OUT_FILE" >&2
+        exit 1
+      fi
     else
-      echo "Error: snapshot not saved to $OUT_FILE" >&2
+      echo "Error: ffmpeg failed to capture snapshot from $STREAM_URL" >&2
       exit 1
     fi
   else
-    echo "Warning: failed to fetch stream URL from embed page; snapshot not saved."
+    echo "Error: stream URL is empty; snapshot not saved." >&2
+    exit 1
   fi
 
 else
