@@ -25,6 +25,8 @@
 
 set -euo pipefail
 
+echo "Starting snapshot capture"
+
 # Base directory for snapshots relative to the repository root
 BASE_DIR="$(dirname "$0")/snapshots"
 
@@ -68,7 +70,11 @@ if (( current_hour >= START_HOUR && current_hour <= END_HOUR )); then
       echo "Error: failed to fetch embed page from $EMBED_URL (curl exit $curl_status)" >&2
       exit 1
     fi
-    STREAM_URL=$(echo "$embed_page" | grep -oP '"streamSrc":"\K[^"]+')
+    STREAM_URL=$(echo "$embed_page" | grep -oP '"streamSrc":"\K[^"]+' || true)
+    if [[ -z "$STREAM_URL" ]]; then
+      echo "Error: stream URL not found in embed page" >&2
+      exit 1
+    fi
     printf -v STREAM_URL '%b' "$STREAM_URL"
   fi
 
