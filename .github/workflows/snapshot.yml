@@ -6,6 +6,9 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   snapshot:
     runs-on: ubuntu-latest
@@ -13,21 +16,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token:  ${{ secrets.MY_TOKEN }}
-      - name: Install ffmpeg
-        run: |
-          sudo apt-get update
-          sudo apt-get install ffmpeg
       - name: Set timezone (optional)
         run: echo "TZ=America/Los_Angeles" >> $GITHUB_ENV
       - name: Run snapshot script
         run: |
           chmod +x ./grab_snapshot.sh
           ./grab_snapshot.sh
-      - name: push
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email ""
-          git add .
-          git diff-index --quiet HEAD || git commit -m "periodic update"
-          git push
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "periodic update"
