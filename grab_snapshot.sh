@@ -53,19 +53,18 @@ mkdir -p "$OUT_DIR"
 # octal interpretation in arithmetic contexts.
 current_hour=$((10#$HOUR))
 if (( current_hour >= START_HOUR && current_hour <= END_HOUR )); then
-  
-	
-  STREAM_URL="https://live.hdontap.com/hls/hosb6lo/scripps_pier-underwater.stream/playlist.m3u8?mt=s3EyxJxwK9dEiiyTKa83jA&e=1755736555"
-  echo "STREAM_URL=$STREAM_URL"	
+
+  EMBED_URL="https://portal.hdontap.com/s/embed/?streamKey=scripps_pier-underwater"
+  STREAM_URL=$(curl -fsSL -H 'User-Agent: Mozilla/5.0' "$EMBED_URL" | grep -oP '"streamSrc":"\K[^"]+')
+  printf -v STREAM_URL '%b' "$STREAM_URL"
   if [[ -n "$STREAM_URL" ]]; then
     OUT_FILE="$OUT_DIR/$HOUR.png"
     # Capture one frame from the current stream URL
     ffmpeg -y -loglevel error -i "$STREAM_URL" -frames:v 1 -f image2 "$OUT_FILE"
     echo "Saved snapshot to $OUT_FILE"
   else
-    echo "Warning: failed to extract stream URL from embed page; snapshot not saved."
+    echo "Warning: failed to fetch stream URL from embed page; snapshot not saved."
   fi
-
 
 else
   echo "Current hour $HOUR is outside the allowed time window ($START_HOUR-$END_HOUR); snapshot not saved."
