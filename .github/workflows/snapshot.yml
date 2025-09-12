@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token:  ${{ secrets.MY_TOKEN }}
       - name: Set timezone (optional)
         run: echo "TZ=America/Los_Angeles" >> $GITHUB_ENV
       - name: Set up Python
