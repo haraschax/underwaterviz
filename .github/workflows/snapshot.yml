@@ -30,6 +30,9 @@ jobs:
         with:
           install-chromedriver: true
           install-dependencies: true
+      - name: Update PATH
+        run: |
+          sudo ln -sf /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome /usr/bin/google-chrome
       - name: Run snapshot script
         run: python grab_snapshot.py
       - name: Commit and push changes
