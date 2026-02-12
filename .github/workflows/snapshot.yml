@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install Python dependencies
-        run: pip install selenium Pillow
+        run: pip install selenium Pillow openai
       - name: Set up Chrome and Chromedriver
         uses: browser-actions/setup-chrome@v2
         with:
@@ -34,6 +34,8 @@ jobs:
         run: |
           sudo ln -sf /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome /usr/bin/google-chrome
       - name: Run snapshot script
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python grab_snapshot.py
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5

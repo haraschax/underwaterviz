@@ -20,6 +20,8 @@ Exit codes:
 """
 
 import argparse
+import base64
+import csv
 import json
 import os
 from pathlib import Path
@@ -41,6 +43,7 @@ REPO_ROOT = Path(__file__).resolve().parent
 SNAP_BASE = REPO_ROOT / "snapshots"
 LAST7_DIR = REPO_ROOT / "docs" / "last7days"
 MONTHS_MANIFEST_FILE = REPO_ROOT / "docs" / "months.json"
+VISIBILITY_CSV = REPO_ROOT / "docs" / "visibility.csv"
 
 DEFAULT_URL = "https://coollab.ucsd.edu/pierviz/"
 DEFAULT_START = int(os.environ.get("START_HOUR", "6"))
@@ -223,6 +226,120 @@ def build_months_manifest(snap_base: Path, out_file: Path) -> None:
         json.dump(months, f)
 
 
+# ----------------------- Visibility estimation -----------------------
+
+VISIBILITY_SYSTEM_PROMPT = """\
+You are an expert marine biologist and underwater visibility analyst for the \
+Scripps Pier underwater camera in La Jolla, California.
+
+The camera is fixed at ~4m (13ft) depth under Scripps Pier, looking through \
+the pier pilings. The pilings serve as distance markers:
+
+- Closest piling (right edge): ~4 ft (1.2m) from camera
+- Mid-right piling: ~11 ft (3.4m) from camera
+- Back-left piling: ~14 ft (4.3m) from camera
+- Farthest visible pilings (center-left): ~30 ft (9m) from camera
+
+Visibility estimation guidelines:
+- If you can clearly see fine texture/barnacles on the 30ft pilings: >25 ft (excellent)
+- If the 14ft piling is sharp with visible texture: ~15-20 ft (good)
+- If the 14ft piling is hazy/faded silhouette: ~10-15 ft (moderate)
+- If only the 11ft piling is visible: ~8-12 ft (poor)
+- If only the closest 4ft piling is clear: ~5-8 ft (very poor)
+- If barely anything is visible: <5 ft (terrible)
+
+Also consider:
+- Blue water = clear conditions
+- Green tint = phytoplankton bloom, reduces visibility
+- Brown/murky = sediment from surf or runoff
+- Particles visible = suspended matter reducing clarity
+- Bright light rays penetrating = good clarity indicator
+
+IMPORTANT: If the image is NOT a valid underwater snapshot (e.g., error page, \
+offline message, webpage screenshot, completely black frame, camera malfunction, \
+animal blocking the lens, or anything else that prevents a reliable visibility \
+reading), you MUST set visibility_ft to "nan".\
+"""
+
+VISIBILITY_USER_PROMPT = """\
+Analyze this underwater camera snapshot from Scripps Pier and estimate the \
+visibility in feet.
+
+Respond in this exact JSON format (no markdown, no code fences):
+{"visibility_ft": <number or "nan">, "conditions": "<brief description>"}\
+"""
+
+
+def estimate_visibility(image_path):
+    """Use GPT-4o to estimate underwater visibility from a snapshot.
+
+    Returns (visibility_ft, conditions) where visibility_ft is a float or NaN.
+    Returns (NaN, error_message) on failure.
+    """
+    api_key = os.environ.get("OPENAI_API_KEY", "")
+    if not api_key:
+        return float("nan"), "OPENAI_API_KEY not set"
+
+    try:
+        from openai import OpenAI
+        client = OpenAI(api_key=api_key)
+
+        with open(image_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("utf-8")
+
+        suffix = Path(image_path).suffix.lower()
+        media_type = "image/png" if suffix == ".png" else "image/jpeg"
+
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": VISIBILITY_SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": VISIBILITY_USER_PROMPT},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{media_type};base64,{b64}",
+                            },
+                        },
+                    ],
+                },
+            ],
+            max_tokens=200,
+            temperature=0,
+        )
+
+        raw = response.choices[0].message.content.strip()
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+
+        result = json.loads(raw)
+        vis = result.get("visibility_ft")
+        conditions = result.get("conditions", "")
+
+        if vis is None or str(vis).lower() == "nan":
+            return float("nan"), conditions
+        return float(vis), conditions
+
+    except Exception as e:
+        print(f"  Visibility estimation failed: {e}", file=sys.stderr)
+        return float("nan"), f"error: {e}"
+
+
+def append_visibility_csv(csv_path, timestamp, visibility_ft, conditions):
+    """Append a row to the visibility CSV, creating it with headers if needed."""
+    write_header = not csv_path.exists()
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(csv_path, "a", newline="") as f:
+        writer = csv.writer(f)
+        if write_header:
+            writer.writerow(["timestamp", "visibility_ft", "conditions"])
+        vis_str = "" if (visibility_ft != visibility_ft) else str(visibility_ft)  # NaN check
+        writer.writerow([timestamp, vis_str, conditions])
+
+
 # ----------------------- CLI -----------------------
 
 def main():
@@ -258,6 +375,14 @@ def main():
                 print(f"Error: snapshot not saved to {out_file}", file=sys.stderr)
                 sys.exit(1)
             print(f"Saved snapshot to {out_file}")
+
+            # Estimate visibility via LLM
+            timestamp = now.strftime("%Y-%m-%d %H:%M")
+            print("Estimating visibility...")
+            vis_ft, conditions = estimate_visibility(out_file)
+            append_visibility_csv(VISIBILITY_CSV, timestamp, vis_ft, conditions)
+            print(f"  Visibility: ~{vis_ft} ft — {conditions}")
+
         except Exception as e:
             print(f"Error while capturing snapshot: {e}", file=sys.stderr)
             sys.exit(1)
