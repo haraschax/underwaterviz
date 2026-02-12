@@ -121,6 +121,15 @@ def capture_snapshot(url: str, out_path: Path, headless: bool = True) -> None:
         if not out_path.exists() or out_path.stat().st_size == 0:
             raise RuntimeError("Snapshot file missing or empty after capture.")
 
+        # Resize to standard size
+        from PIL import Image
+        TARGET_W, TARGET_H = 1920, 940
+        img = Image.open(out_path)
+        if img.size != (TARGET_W, TARGET_H):
+            img = img.resize((TARGET_W, TARGET_H), Image.LANCZOS)
+            img.save(out_path)
+
+
     finally:
         driver.quit()
 
