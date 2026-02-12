@@ -80,8 +80,12 @@
       max-width: 90%;
       max-height: 90%;
     }
-    /* Overlay styles have been removed because the image enlargement functionality
-       has been disabled for better mobile scrolling performance. */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 16px;
+      color: #888;
+    }
   </style>
 </head>
 <body>
@@ -267,7 +271,6 @@
           const wrapper = document.createElement('div');
           wrapper.style.position = 'relative';
           const img = document.createElement('img');
-          // Images are stored in docs/last7days relative to this page
           img.src = `last7days/${info.file}`;
           const dateLabel = `${info.date} ${info.time.padStart(2, '0')}:00`;
           img.alt = dateLabel;
@@ -284,7 +287,33 @@
           label.style.backgroundColor = 'rgba(0,0,0,0.5)';
           wrapper.appendChild(img);
           wrapper.appendChild(label);
-          // Enlarge image on click via the modal overlay
+          // Show visibility estimate if available
+          if (info.visibility_ft != null) {
+            const visLabel = document.createElement('div');
+            visLabel.textContent = `~${Math.round(info.visibility_ft)} ft visibility`;
+            if (info.conditions) {
+              visLabel.title = info.conditions;
+            }
+            visLabel.style.position = 'absolute';
+            visLabel.style.top = '4px';
+            visLabel.style.right = '4px';
+            visLabel.style.padding = '3px 6px';
+            visLabel.style.fontSize = '12px';
+            visLabel.style.fontWeight = 'bold';
+            visLabel.style.borderRadius = '3px';
+            const vis = info.visibility_ft;
+            if (vis >= 20) {
+              visLabel.style.color = 'white';
+              visLabel.style.backgroundColor = 'rgba(0, 150, 0, 0.75)';
+            } else if (vis >= 12) {
+              visLabel.style.color = 'white';
+              visLabel.style.backgroundColor = 'rgba(0, 120, 200, 0.75)';
+            } else {
+              visLabel.style.color = 'white';
+              visLabel.style.backgroundColor = 'rgba(200, 80, 0, 0.75)';
+            }
+            wrapper.appendChild(visLabel);
+          }
           wrapper.addEventListener('click', () => openModal(img.src, dateLabel));
           grid.appendChild(wrapper);
         });
@@ -466,6 +495,11 @@
       }
       const monthDisplay = `${monthNames[parseInt(month, 10) - 1]} ${year}`;
       setBreadcrumb(['Home', monthDisplay]);
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'loading';
+      loadingDiv.textContent = 'Loading images...';
+      contentDiv.appendChild(loadingDiv);
+
       const items = await fetchDir(`${year}/${month}`);
       const dayDirs = items.filter(item => item.type === 'dir');
       const images = [];
@@ -491,7 +525,7 @@
       contentDiv.innerHTML = '';
       const grid = document.createElement('div');
       grid.className = 'grid';
-          images.forEach(info => {
+      images.forEach(info => {
         const wrapper = document.createElement('div');
         wrapper.style.position = 'relative';
         const img = document.createElement('img');
@@ -512,12 +546,10 @@
         label.style.backgroundColor = 'rgba(0,0,0,0.5)';
         wrapper.appendChild(img);
         wrapper.appendChild(label);
-        // Enlarge image on click via the modal overlay
         wrapper.addEventListener('click', () => openModal(img.src, dateLabel));
         grid.appendChild(wrapper);
       });
-          // Append the image grid to the content area
-          contentDiv.appendChild(grid);
+      contentDiv.appendChild(grid);
 
     }
 
@@ -556,7 +588,7 @@
         label.style.left = '4px';
         label.style.padding = '2px 4px';
         label.style.fontSize = '12px';
-        label.style.color = 'red';
+        label.style.color = 'white';
         label.style.backgroundColor = 'rgba(0,0,0,0.5)';
         wrapper.appendChild(img);
         wrapper.appendChild(label);

@@ -160,6 +160,28 @@ def clean_outside_window(snap_base: Path, start_h: int, end_h: int) -> None:
             continue
 
 
+def _load_visibility_data(csv_path):
+    """Load visibility CSV into a dict keyed by 'YYYY-MM-DD HH' for quick lookup."""
+    vis_data = {}
+    if not csv_path.exists():
+        return vis_data
+    with open(csv_path, newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            ts = row.get("timestamp", "").strip()
+            vis = row.get("visibility_ft", "").strip()
+            cond = row.get("conditions", "").strip()
+            if not ts:
+                continue
+            # Key by "YYYY-MM-DD HH" (drop minutes)
+            key = ts[:13]
+            try:
+                vis_data[key] = {"visibility_ft": float(vis), "conditions": cond}
+            except (ValueError, TypeError):
+                vis_data[key] = {"visibility_ft": None, "conditions": cond}
+    return vis_data
+
+
 def build_last7days(snap_base: Path, last7_dir: Path, start_h: int, end_h: int) -> None:
     """Pick closest-to-noon snapshot for each of last 7 days and write manifest."""
     last7_dir.mkdir(parents=True, exist_ok=True)
@@ -167,6 +189,8 @@ def build_last7days(snap_base: Path, last7_dir: Path, start_h: int, end_h: int) 
     for old in last7_dir.glob("*.png"):
         old.unlink(missing_ok=True)
     (last7_dir / "last7days.json").unlink(missing_ok=True)
+
+    vis_data = _load_visibility_data(VISIBILITY_CSV)
 
     manifest = []
     noon = 12
@@ -199,11 +223,19 @@ def build_last7days(snap_base: Path, last7_dir: Path, start_h: int, end_h: int) 
         if best_file:
             out_name = f"{Y}-{M}-{D}_{best_file.stem}.png"
             shutil.copy2(best_file, last7_dir / out_name)
-            manifest.append({
+            entry = {
                 "file": out_name,
                 "date": f"{Y}-{M}-{D}",
                 "time": best_file.stem
-            })
+            }
+            # Attach visibility data if available
+            hour_str = best_file.stem.zfill(2)
+            vis_key = f"{Y}-{M}-{D} {hour_str}"
+            vis_info = vis_data.get(vis_key)
+            if vis_info and vis_info["visibility_ft"] is not None:
+                entry["visibility_ft"] = vis_info["visibility_ft"]
+                entry["conditions"] = vis_info["conditions"]
+            manifest.append(entry)
 
     with open(last7_dir / "last7days.json", "w") as f:
         json.dump(manifest, f)
