@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scripps Underwater Camera Log</title>
-  <!-- Favicon: a simple fish icon encoded as an SVG data URI -->
   <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xNi42OSA3LjQ0YTYuOTczIDYuOTczIDAgMCAwIC0xLjY5IDQuNTZjMCAxLjc0NyAuNjQgMy4zNDUgMS42OTkgNC41NzEiIC8+PHBhdGggZD0iTTIgOS41MDRjNy43MTUgOC42NDcgMTQuNzUgMTAuMjY1IDIwIDIuNDk4Yy01LjI1IC03Ljc2MSAtMTIuMjg1IC02LjE0MiAtMjAgMi41MDQiIC8+PHBhdGggZD0iTTE4IDExdi4wMSIgLz48cGF0aCBkPSJNMTEuNSAxMC41Yy0uNjY3IDEgLS42NjcgMiAwIDMiIC8+PC9zdmc+' />
   <style>
     body {
@@ -51,7 +50,6 @@
     }
     .grid {
       display: grid;
-      /* Increase minimum cell width to make images larger on desktop */
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 10px;
     }
@@ -63,7 +61,6 @@
       box-shadow: 0 1px 2px rgba(0,0,0,0.1);
       cursor: pointer;
     }
-    /* Full screen overlay for displaying enlarged images */
     .overlay {
       position: fixed;
       top: 0;
@@ -86,6 +83,16 @@
       font-size: 16px;
       color: #888;
     }
+    .vis-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      padding: 3px 6px;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 3px;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -94,29 +101,28 @@
   <div id="content"></div>
 
   <script>
-    // Base URLs for GitHub API and raw content.
     const apiBase = 'https://api.github.com/repos/haraschax/underwaterviz/contents/snapshots';
     const rawBase = 'https://raw.githubusercontent.com/haraschax/underwaterviz/master/snapshots';
 
     const breadcrumbDiv = document.getElementById('breadcrumb');
     const contentDiv = document.getElementById('content');
 
-    // Human readable month names used for labeling months.
     const monthNames = [
       'January','February','March','April','May','June',
       'July','August','September','October','November','December'
     ];
+    const monthAbbrev = [
+      'jan','feb','mar','apr','may','jun',
+      'jul','aug','sep','oct','nov','dec'
+    ];
 
-    // Track the current year and month when navigating so breadcrumb
-    // interactions can restore the appropriate view. These variables
-    // are updated inside loadDays() and loadImages().
     let currentYear = null;
     let currentMonth = null;
 
-    // Create an overlay and modal functionality for enlarging images. Clicking
-    // on any image will display it full screen. Clicking the overlay
-    // dismisses it. This feature was previously removed for mobile due to
-    // scrolling issues, but has been reinstated per user request.
+    // Visibility data loaded from CSV
+    let visibilityData = {};
+
+    // Overlay for full-screen image view
     const overlay = document.createElement('div');
     overlay.className = 'overlay';
     const overlayImg = document.createElement('img');
@@ -126,27 +132,86 @@
     });
     document.body.appendChild(overlay);
 
-    /**
-     * Show a given image in the full screen overlay.
-     *
-     * @param {string} src - The URL of the image to display
-     * @param {string} alt - Alternative text (used for accessibility)
-     */
     function openModal(src, alt = '') {
       overlayImg.src = src;
       overlayImg.alt = alt;
       overlay.style.display = 'flex';
     }
 
-    /**
-     * Fetch a directory listing from the GitHub API. Returns an array
-     * of objects describing files and directories.
-     */
+    // --- Visibility CSV loading ---
+
+    async function loadVisibilityData() {
+      try {
+        const response = await fetch('visibility.csv');
+        if (!response.ok) return;
+        const text = await response.text();
+        const lines = text.trim().split('\n');
+        if (lines.length < 2) return;
+        // Parse CSV: timestamp,visibility_ft,conditions
+        for (let i = 1; i < lines.length; i++) {
+          const match = lines[i].match(/^([^,]+),([^,]*),(.*)/);
+          if (!match) continue;
+          const ts = match[1].trim();
+          const vis = match[2].trim();
+          const cond = match[3].trim().replace(/^"|"$/g, '');
+          // Key by "YYYY-MM-DD HH" (first 13 chars of timestamp)
+          const key = ts.substring(0, 13);
+          visibilityData[key] = {
+            visibility_ft: vis === '' ? null : parseFloat(vis),
+            conditions: cond
+          };
+        }
+      } catch (e) {
+        console.error('Failed to load visibility data:', e);
+      }
+    }
+
+    function getVisibility(year, month, day, hour) {
+      const key = `${year}-${month}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}`;
+      return visibilityData[key] || null;
+    }
+
+    function createVisBadge(visFt, conditions) {
+      const badge = document.createElement('div');
+      badge.className = 'vis-badge';
+      if (visFt == null || isNaN(visFt)) {
+        badge.textContent = 'nan';
+        badge.style.backgroundColor = 'rgba(100, 100, 100, 0.75)';
+      } else {
+        badge.textContent = `~${Math.round(visFt)} ft`;
+        if (conditions) badge.title = conditions;
+        if (visFt >= 20) {
+          badge.style.backgroundColor = 'rgba(0, 150, 0, 0.75)';
+        } else if (visFt >= 12) {
+          badge.style.backgroundColor = 'rgba(0, 120, 200, 0.75)';
+        } else {
+          badge.style.backgroundColor = 'rgba(200, 80, 0, 0.75)';
+        }
+      }
+      return badge;
+    }
+
+    // --- URL routing helpers ---
+
+    function monthSlug(year, month) {
+      const mIdx = parseInt(month, 10) - 1;
+      return `${year}${monthAbbrev[mIdx]}`;
+    }
+
+    function parseMonthSlug(slug) {
+      // Parse "2026jan" -> { year: "2026", month: "01" }
+      const match = slug.match(/^(\d{4})([a-z]{3})$/);
+      if (!match) return null;
+      const year = match[1];
+      const abbr = match[2];
+      const idx = monthAbbrev.indexOf(abbr);
+      if (idx === -1) return null;
+      return { year, month: String(idx + 1).padStart(2, '0') };
+    }
+
+    // --- GitHub API fetch with caching ---
+
     async function fetchDir(path = '') {
-      // Use sessionStorage to cache directory listings and reduce API calls.
-      // Rate limiting on GitHub can be hit if too many unauthenticated
-      // requests are made in a short period. Cached entries expire after
-      // one hour.
       const cacheKey = path || 'root';
       try {
         const cachedRaw = sessionStorage.getItem(`uw_cache_${cacheKey}`);
@@ -157,16 +222,12 @@
             if (Date.now() - cached.time < oneHour) {
               return cached.data;
             }
-            // Expired; remove.
             sessionStorage.removeItem(`uw_cache_${cacheKey}`);
           } catch (e) {
-            // If parsing fails, remove corrupted cache entry.
             sessionStorage.removeItem(`uw_cache_${cacheKey}`);
           }
         }
-      } catch (e) {
-        // If sessionStorage is not available or other errors, fall through
-      }
+      } catch (e) {}
       try {
         const url = path ? `${apiBase}/${path}` : apiBase;
         const response = await fetch(url);
@@ -176,9 +237,7 @@
         const data = await response.json();
         try {
           sessionStorage.setItem(`uw_cache_${cacheKey}`, JSON.stringify({ data, time: Date.now() }));
-        } catch (e) {
-          // If sessionStorage quota exceeded or unavailable, ignore.
-        }
+        } catch (e) {}
         return data;
       } catch (err) {
         console.error(err);
@@ -186,43 +245,22 @@
       }
     }
 
-    /**
-     * Render breadcrumb navigation and attach click handlers to navigate
-     * back up the directory tree. The parts array contains each level
-     * currently selected.
-     */
+    // --- Breadcrumb ---
+
     function setBreadcrumb(parts) {
       breadcrumbDiv.innerHTML = '';
       parts.forEach((part, idx) => {
         const span = document.createElement('span');
         span.textContent = part;
         span.addEventListener('click', () => {
-          /**
-          * Handle breadcrumb navigation. The site primarily operates in a
-           * flattened months view labelled as "Home" → "<MonthName> <Year>".
-           * When operating in this view, only two crumb levels exist.
-           * Clicking the first crumb returns to the top-level months view; clicking
-           * the second crumb reloads the month. A legacy "Years" view
-           * remains for backward compatibility but is not used by default.
-           */
           if (parts[0] === 'Home') {
             if (idx === 0) {
-              // Return to the list of all months
+              history.pushState({ view: 'months' }, '', '/');
               loadAllMonths();
             } else if (idx === 1) {
-              // Reload the selected month
               if (currentYear && currentMonth) {
                 loadDays(currentYear, currentMonth);
               }
-            }
-          } else {
-            // Legacy Years view handling
-            if (idx === 0) {
-              loadYears();
-            } else if (idx === 1) {
-              loadMonths(parts[1]);
-            } else if (idx === 2) {
-              loadDays(parts[1], parts[2]);
             }
           }
         });
@@ -230,9 +268,6 @@
       });
     }
 
-    /**
-     * Create a clickable item element representing a navigation entry.
-     */
     function createItem(name, onClick) {
       const div = document.createElement('div');
       div.className = 'item';
@@ -241,25 +276,15 @@
       return div;
     }
 
-    /**
-     * Load snapshots from the past seven days and display one image per day
-     * closest to noon (12:00). Only images between 06:00 and 19:59 are
-     * considered. Each image is overlayed with its date and time in red.
-     */
+    // --- Last 7 days ---
+
     async function loadLast7DaysImages() {
-      // Fetch the pre‑generated list of highlight images from the server. The
-      // grab_snapshot script populates docs/last7days/last7days.json with
-      // metadata for the last seven days. This removes the need for the
-      // client to perform time‑window logic or multiple API requests.
       try {
         const response = await fetch('last7days/last7days.json');
-        if (!response.ok) {
-          return;
-        }
+        if (!response.ok) return;
         const imagesInfo = await response.json();
-        if (!Array.isArray(imagesInfo) || imagesInfo.length === 0) {
-          return;
-        }
+        if (!Array.isArray(imagesInfo) || imagesInfo.length === 0) return;
+
         const section = document.createElement('div');
         const heading = document.createElement('h2');
         heading.textContent = 'Midday images from the last 7 days';
@@ -267,6 +292,7 @@
         section.appendChild(heading);
         const grid = document.createElement('div');
         grid.className = 'grid';
+
         imagesInfo.forEach(info => {
           const wrapper = document.createElement('div');
           wrapper.style.position = 'relative';
@@ -287,36 +313,16 @@
           label.style.backgroundColor = 'rgba(0,0,0,0.5)';
           wrapper.appendChild(img);
           wrapper.appendChild(label);
-          // Show visibility estimate if available
-          if (info.visibility_ft != null) {
-            const visLabel = document.createElement('div');
-            visLabel.textContent = `~${Math.round(info.visibility_ft)} ft visibility`;
-            if (info.conditions) {
-              visLabel.title = info.conditions;
-            }
-            visLabel.style.position = 'absolute';
-            visLabel.style.top = '4px';
-            visLabel.style.right = '4px';
-            visLabel.style.padding = '3px 6px';
-            visLabel.style.fontSize = '12px';
-            visLabel.style.fontWeight = 'bold';
-            visLabel.style.borderRadius = '3px';
-            const vis = info.visibility_ft;
-            if (vis >= 20) {
-              visLabel.style.color = 'white';
-              visLabel.style.backgroundColor = 'rgba(0, 150, 0, 0.75)';
-            } else if (vis >= 12) {
-              visLabel.style.color = 'white';
-              visLabel.style.backgroundColor = 'rgba(0, 120, 200, 0.75)';
-            } else {
-              visLabel.style.color = 'white';
-              visLabel.style.backgroundColor = 'rgba(200, 80, 0, 0.75)';
-            }
-            wrapper.appendChild(visLabel);
-          }
+
+          // Visibility badge from manifest or CSV
+          const visFt = info.visibility_ft != null ? info.visibility_ft : null;
+          const cond = info.conditions || '';
+          wrapper.appendChild(createVisBadge(visFt, cond));
+
           wrapper.addEventListener('click', () => openModal(img.src, dateLabel));
           grid.appendChild(wrapper);
         });
+
         section.appendChild(grid);
         contentDiv.appendChild(section);
       } catch (err) {
@@ -324,52 +330,34 @@
       }
     }
 
-    /**
-     * Load all months across all years and render clickable boxes. This
-     * function collapses the year/month hierarchy into a single view. Each
-     * month is displayed with its full name and year (e.g. "July 2025").
-     * Clicking a month drills down into the images for that month.
-     */
+    // --- All months view (home) ---
+
     async function loadAllMonths() {
       contentDiv.innerHTML = '';
-      // Update browser history to reflect the months view. When this view is
-      // loaded, pressing the back button will return here instead of leaving
-      // the site. Use replaceState to avoid stacking multiple identical
-      // entries on repeated calls.
       if (!history.state || history.state.view !== 'months') {
-        // Retain the internal view name "months" for backward
-        // compatibility, but the breadcrumb label is "Home".
-        history.replaceState({ view: 'months' }, '', '');
+        history.replaceState({ view: 'months' }, '', '/');
       }
       setBreadcrumb(['Home']);
       await loadLast7DaysImages();
+
       const heading = document.createElement('h2');
       heading.textContent = 'Browse historical pictures';
       heading.style.textAlign = 'center';
       heading.style.marginTop = '20px';
       contentDiv.appendChild(heading);
-    
 
-      // Fetch the months manifest generated by grab_snapshot.sh. This JSON file
-      // lists all year/month combinations that contain at least one snapshot.
       try {
         const response = await fetch('months.json');
-        if (!response.ok) {
-          throw new Error('Failed to load months manifest');
-        }
+        if (!response.ok) throw new Error('Failed to load months manifest');
         const monthsList = await response.json();
-        if (!Array.isArray(monthsList) || monthsList.length === 0) {
-          throw new Error('Invalid months manifest');
-        }
-        // Sort months descending by year then month for a logical ordering
+        if (!Array.isArray(monthsList) || monthsList.length === 0) throw new Error('Invalid months manifest');
+
         monthsList.sort((a, b) => {
-          const ya = parseInt(a.year, 10);
-          const yb = parseInt(b.year, 10);
+          const ya = parseInt(a.year, 10), yb = parseInt(b.year, 10);
           if (ya !== yb) return yb - ya;
-          const ma = parseInt(a.month, 10);
-          const mb = parseInt(b.month, 10);
-          return mb - ma;
+          return parseInt(b.month, 10) - parseInt(a.month, 10);
         });
+
         const container = document.createElement('div');
         container.className = 'container';
         monthsList.forEach(entry => {
@@ -379,7 +367,6 @@
         });
         contentDiv.appendChild(container);
       } catch (err) {
-        // If the manifest cannot be loaded, show a message instead of failing
         console.error(err);
         const msg = document.createElement('p');
         msg.textContent = 'No historical images are available.';
@@ -387,43 +374,28 @@
         msg.style.marginTop = '15px';
         contentDiv.appendChild(msg);
       }
-     
- 
+
       const heading2 = document.createElement('h2');
       heading2.textContent = 'The Scripps Underwater Cam';
       heading2.style.textAlign = 'center';
       heading2.style.marginTop = '18px';
       contentDiv.appendChild(heading2);
 
-       // Insert a paragraph describing how to estimate water visibility and an
-      // accompanying example image underneath the heading. This text provides
-      // context for viewers browsing the historical snapshots. The image is
-      // stored locally in the docs folder so it is always available, even
-      // when the page is opened directly from the file system.
-
       const infoP = document.createElement('p');
-
-      infoP.append(
-        'This website is just a historical log of the Scripps Pier Underwater Camera: '
-      );
-
+      infoP.append('This website is just a historical log of the Scripps Pier Underwater Camera: ');
       const link = document.createElement('a');
       link.href = 'https://coollab.ucsd.edu/pierviz/';
       link.textContent = 'https://coollab.ucsd.edu/pierviz/';
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
       infoP.appendChild(link);
-
-      infoP.append(
-        '. This website is completely open-source, feel free to contribute: '
-      );
+      infoP.append('. This website is completely open-source, feel free to contribute: ');
       const link2 = document.createElement('a');
       link2.href = 'https://github.com/haraschax/underwaterviz';
       link2.textContent = 'https://github.com/haraschax/underwaterviz';
       link2.target = '_blank';
       link2.rel = 'noopener noreferrer';
       infoP.appendChild(link2);
-
       infoP.append(
         '. The underwater cam is a great tool to estimate underwater visibility in La Jolla for snorkeling or diving.',
         document.createElement('br'),
@@ -436,7 +408,6 @@
         'pilings on the left, the farthest one is 9m (30 ft) away, and visibility rarely ',
         'gets this good. Below is an example of great visibility:',
       );
-
       infoP.style.marginTop = '20px';
       infoP.style.maxWidth = '800px';
       infoP.style.marginLeft = 'auto';
@@ -452,49 +423,23 @@
       exampleImg.style.maxWidth = '800px';
       exampleImg.style.width = '100%';
       contentDiv.appendChild(exampleImg);
-
     }
 
-    /**
-     * Load the months within a given year and render clickable boxes. This
-     * function remains for backward compatibility when browsing via the
-     * Years view.
-     */
-    async function loadMonths(year) {
-      setBreadcrumb(['Years', year]);
-      const items = await fetchDir(year);
-      const dirs = items.filter(item => item.type === 'dir');
-      contentDiv.innerHTML = '';
-      const container = document.createElement('div');
-      container.className = 'container';
-      dirs.forEach(dir => {
-        const monthNum = parseInt(dir.name, 10);
-        const displayName = `${monthNames[monthNum - 1]} ${year}`;
-        container.appendChild(createItem(displayName, () => loadDays(year, dir.name, true)));
-      });
-      contentDiv.appendChild(container);
-    }
+    // --- Month view (flattened days) ---
 
-    /**
-     * Load the images within a given month and display them in a single grid.
-     * All days under the month are flattened. Only images within the
-     * allowed time window (06:00–19:59) are shown, and each image is
-     * annotated with its date and time in red.
-     */
     async function loadDays(year, month, pushHistory = false) {
-      // Track the current year and month for breadcrumb navigation
       currentYear = year;
       currentMonth = month;
-      // If requested, push a new history entry so that the back button
-      // returns to the months view instead of the previous website. Only
-      // push when navigating via user interaction (e.g. clicking a month),
-      // not when redrawing the month due to breadcrumb navigation or
-      // popstate events.
+      const slug = monthSlug(year, month);
+
       if (pushHistory) {
-        history.pushState({ view: 'month', year, month }, '', '');
+        history.pushState({ view: 'month', year, month }, '', `/${slug}`);
       }
+
       const monthDisplay = `${monthNames[parseInt(month, 10) - 1]} ${year}`;
       setBreadcrumb(['Home', monthDisplay]);
+      contentDiv.innerHTML = '';
+
       const loadingDiv = document.createElement('div');
       loadingDiv.className = 'loading';
       loadingDiv.textContent = 'Loading images...';
@@ -515,16 +460,15 @@
         });
       }
       images.sort((a, b) => {
-        const da = parseInt(a.day, 10);
-        const db = parseInt(b.day, 10);
+        const da = parseInt(a.day, 10), db = parseInt(b.day, 10);
         if (da !== db) return da - db;
-        const ha = parseInt(a.file.split('.')[0], 10);
-        const hb = parseInt(b.file.split('.')[0], 10);
-        return ha - hb;
+        return parseInt(a.file.split('.')[0], 10) - parseInt(b.file.split('.')[0], 10);
       });
+
       contentDiv.innerHTML = '';
       const grid = document.createElement('div');
       grid.className = 'grid';
+
       images.forEach(info => {
         const wrapper = document.createElement('div');
         wrapper.style.position = 'relative';
@@ -546,82 +490,37 @@
         label.style.backgroundColor = 'rgba(0,0,0,0.5)';
         wrapper.appendChild(img);
         wrapper.appendChild(label);
+
+        // Visibility badge from CSV data
+        const hour = parseInt(info.file.split('.')[0], 10);
+        const visInfo = getVisibility(info.year, info.month, info.day, hour);
+        const visFt = visInfo ? visInfo.visibility_ft : null;
+        const cond = visInfo ? visInfo.conditions : '';
+        wrapper.appendChild(createVisBadge(visFt, cond));
+
         wrapper.addEventListener('click', () => openModal(img.src, dateLabel));
         grid.appendChild(wrapper);
       });
-      contentDiv.appendChild(grid);
 
-    }
-
-    /**
-     * Load the images within a given day (unused when using the flattened
-     * month view, but retained for compatibility with the Years view).
-     */
-    async function loadImages(year, month, day) {
-      // Track the current year and month and update the breadcrumb to use month names
-      currentYear = year;
-      currentMonth = month;
-      const monthDisplay = `${monthNames[parseInt(month, 10) - 1]} ${year}`;
-      setBreadcrumb(['Home', monthDisplay, day]);
-      const items = await fetchDir(`${year}/${month}/${day}`);
-      const files = items.filter(item => item.type === 'file').filter(item => {
-        const hour = parseInt(item.name.split('.')[0], 10);
-        return hour >= 6 && hour < 20;
-      });
-      contentDiv.innerHTML = '';
-      const grid = document.createElement('div');
-      grid.className = 'grid';
-      files.forEach(file => {
-        const wrapper = document.createElement('div');
-        wrapper.style.position = 'relative';
-        const img = document.createElement('img');
-        img.src = `${rawBase}/${year}/${month}/${day}/${file.name}`;
-        const hourStr = file.name.split('.')[0].padStart(2, '0');
-        const dateLabel = `${year}-${month}-${day} ${hourStr}:00`;
-        img.alt = dateLabel;
-        img.title = dateLabel;
-        img.style.display = 'block';
-        const label = document.createElement('div');
-        label.textContent = dateLabel;
-        label.style.position = 'absolute';
-        label.style.bottom = '4px';
-        label.style.left = '4px';
-        label.style.padding = '2px 4px';
-        label.style.fontSize = '12px';
-        label.style.color = 'white';
-        label.style.backgroundColor = 'rgba(0,0,0,0.5)';
-        wrapper.appendChild(img);
-        wrapper.appendChild(label);
-        // Enlarge image on click via the modal overlay
-        wrapper.addEventListener('click', () => openModal(img.src, dateLabel));
-        grid.appendChild(wrapper);
-      });
       contentDiv.appendChild(grid);
     }
 
-    /**
-     * Load the list of years from the snapshots directory and render
-     * clickable boxes for each year. Not used in the new Months view.
-     */
-    async function loadYears() {
-      contentDiv.innerHTML = '';
-      setBreadcrumb(['Years']);
-      await loadLast7DaysImages();
-      const items = await fetchDir();
-      const dirs = items.filter(item => item.type === 'dir');
-      const container = document.createElement('div');
-      container.className = 'container';
-      dirs.forEach(dir => {
-        container.appendChild(createItem(dir.name, () => loadMonths(dir.name)));
-      });
-      contentDiv.appendChild(container);
+    // --- URL routing on page load ---
+
+    function routeFromURL() {
+      const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+      if (path) {
+        const parsed = parseMonthSlug(path);
+        if (parsed) {
+          history.replaceState({ view: 'month', year: parsed.year, month: parsed.month }, '', `/${path}`);
+          loadDays(parsed.year, parsed.month);
+          return;
+        }
+      }
+      loadAllMonths();
     }
 
-    // Initialise by loading all months
-    // Handle browser back/forward navigation. When the history state
-    // changes (e.g. via the browser back button), reload the appropriate
-    // view based on the stored state. If no state is present, default
-    // to the months overview.
+    // Handle browser back/forward
     window.addEventListener('popstate', (event) => {
       const state = event.state;
       if (!state || !state.view || state.view === 'months') {
@@ -631,8 +530,8 @@
       }
     });
 
-    // Initialise by loading all months
-    loadAllMonths();
+    // Load visibility data first, then route
+    loadVisibilityData().then(() => routeFromURL());
   </script>
 </body>
 </html>
