@@ -406,70 +406,97 @@
 
       const section = document.createElement('div');
       section.style.margin = '20px auto';
-      section.style.maxWidth = '900px';
+      section.style.maxWidth = '1100px';
 
       const heading = document.createElement('h2');
-      heading.textContent = 'Visibility Trend';
+      heading.textContent = 'La Jolla Pier 6 Months Visibility Trend';
       heading.style.textAlign = 'center';
       section.appendChild(heading);
 
       const canvas = document.createElement('canvas');
-      canvas.width = 900;
-      canvas.height = 300;
+      canvas.width = 1200;
+      canvas.height = 500;
       canvas.style.width = '100%';
       canvas.style.height = 'auto';
       canvas.style.backgroundColor = '#fff';
       canvas.style.border = '1px solid #ddd';
-      canvas.style.borderRadius = '4px';
+      canvas.style.borderRadius = '6px';
       section.appendChild(canvas);
       parent.appendChild(section);
 
       const ctx = canvas.getContext('2d');
       const W = canvas.width;
       const H = canvas.height;
-      const padL = 50, padR = 20, padT = 20, padB = 50;
+      const padL = 80, padR = 30, padT = 30, padB = 70;
       const plotW = W - padL - padR;
       const plotH = H - padT - padB;
       const maxVis = 40;
+      const tickLen = 6;
 
       function dateX(i) { return padL + (i / (dates.length - 1)) * plotW; }
       function visY(v) { return padT + plotH - (Math.min(v, maxVis) / maxVis) * plotH; }
 
       // Grid lines
-      ctx.strokeStyle = '#e0e0e0';
+      ctx.strokeStyle = '#e8e8e8';
       ctx.lineWidth = 1;
-      for (let v = 0; v <= maxVis; v += 5) {
+      for (let v = 5; v <= maxVis; v += 5) {
         const y = visY(v);
         ctx.beginPath();
+        ctx.setLineDash([4, 4]);
         ctx.moveTo(padL, y);
         ctx.lineTo(W - padR, y);
         ctx.stroke();
       }
+      ctx.setLineDash([]);
 
-      // Y-axis labels
-      ctx.fillStyle = '#666';
-      ctx.font = '11px Arial';
+      // Axes
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT);
+      ctx.lineTo(padL, padT + plotH);
+      ctx.lineTo(W - padR, padT + plotH);
+      ctx.stroke();
+
+      // Y-axis ticks and labels
+      ctx.fillStyle = '#333';
+      ctx.font = 'bold 16px Arial';
       ctx.textAlign = 'right';
-      for (let v = 0; v <= maxVis; v += 10) {
-        ctx.fillText(`${v} ft`, padL - 6, visY(v) + 4);
+      ctx.textBaseline = 'middle';
+      for (let v = 0; v <= maxVis; v += 5) {
+        const y = visY(v);
+        ctx.beginPath();
+        ctx.moveTo(padL - tickLen, y);
+        ctx.lineTo(padL, y);
+        ctx.stroke();
+        if (v % 10 === 0) {
+          ctx.fillText(`${v} ft`, padL - tickLen - 4, y);
+        }
       }
 
-      // X-axis labels
+      // X-axis ticks and labels
+      ctx.font = 'bold 14px Arial';
       ctx.textAlign = 'center';
-      const labelCount = Math.min(dates.length, 8);
+      ctx.textBaseline = 'top';
+      const labelCount = Math.min(dates.length, 10);
       const labelStep = Math.max(1, Math.floor(dates.length / labelCount));
       for (let i = 0; i < dates.length; i += labelStep) {
+        const x = dateX(i);
+        ctx.beginPath();
+        ctx.moveTo(x, padT + plotH);
+        ctx.lineTo(x, padT + plotH + tickLen);
+        ctx.stroke();
         const parts = dates[i].split('-');
         const mo = monthAbbrev[parseInt(parts[1], 10) - 1];
         const day = parseInt(parts[2], 10);
-        ctx.fillText(`${mo} ${day}`, dateX(i), H - padB + 16);
+        ctx.fillText(`${mo} ${day}`, x, padT + plotH + tickLen + 4);
       }
 
       // Color function
       function visColor(v) {
-        if (v >= 20) return 'rgba(0, 150, 0, 0.45)';
-        if (v >= 12) return 'rgba(0, 120, 200, 0.45)';
-        return 'rgba(200, 80, 0, 0.45)';
+        if (v >= 20) return 'rgba(0, 150, 0, 0.4)';
+        if (v >= 12) return 'rgba(0, 120, 200, 0.4)';
+        return 'rgba(200, 80, 0, 0.4)';
       }
 
       // Draw scatter points (every data point)
@@ -479,14 +506,14 @@
         const x = dateX(i);
         const y = visY(pt.vis);
         ctx.beginPath();
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
         ctx.fillStyle = visColor(pt.vis);
         ctx.fill();
       }
 
       // Draw daily mean line
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#222';
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
       for (let i = 0; i < dates.length; i++) {
         const x = dateX(i);
