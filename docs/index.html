@@ -360,7 +360,7 @@
           wrapper.appendChild(img);
           wrapper.appendChild(label);
 
-          // Visibility badge from manifest or CSV
+          // Visibility badge from manifest
           const visFt = info.visibility_ft != null ? info.visibility_ft : null;
           const cond = info.conditions || '';
           wrapper.appendChild(createVisBadge(visFt, cond));
@@ -394,13 +394,11 @@
       const dates = Object.keys(dailyPoints).sort();
       if (dates.length < 2) return;
 
-      // Compute median for each day
-      function median(arr) {
-        const sorted = arr.slice().sort((a, b) => a - b);
-        const mid = Math.floor(sorted.length / 2);
-        return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      // Compute mean for each day (NaN values already filtered out)
+      function mean(arr) {
+        return arr.reduce((a, b) => a + b, 0) / arr.length;
       }
-      const dailyMedian = dates.map(d => median(dailyPoints[d]));
+      const dailyMean = dates.map(d => mean(dailyPoints[d]));
 
       // Date index map for x-positioning
       const dateIdx = {};
@@ -486,13 +484,13 @@
         ctx.fill();
       }
 
-      // Draw daily median line
+      // Draw daily mean line
       ctx.strokeStyle = '#333';
       ctx.lineWidth = 2;
       ctx.beginPath();
       for (let i = 0; i < dates.length; i++) {
         const x = dateX(i);
-        const y = visY(dailyMedian[i]);
+        const y = visY(dailyMean[i]);
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
