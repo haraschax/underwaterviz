@@ -391,3 +391,4 @@ timestamp,visibility_ft,conditions
 2026-01-30 18:00,,"Frame shows only dark static/noise with no discernible pier pilings or seafloor, indicating camera malfunction or darkness; cannot assess visibility."
 2026-01-29 15:00,25.0,"Seafloor clearly visible. Closest and 11 ft pilings sharp with texture. The central far piling (~30 ft) is visible but only as a hazy silhouette with little detail, less clear than reference. Fits the 30 ft piling faint-silhouette criterion."
 2026-01-31 15:00,25.0,"Closest and mid-range pilings show good detail, but the far ~30 ft pilings are only faint blue silhouettes and lack clear texture; sandy bottom still discernible. This matches the 25 ft guideline."
+2026-02-12 17:36,15.0,"Closest 4 ft piling on right shows some texture. The next piling (~11 ft) is visible but lacks detail, and the 14 ft piling is only a faint silhouette. Far 30 ft pilings and sandy bottom are not discernible. Overall scene is quite hazy."
