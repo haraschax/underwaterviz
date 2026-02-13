@@ -2337,3 +2337,4 @@ timestamp,visibility_ft,conditions
 2025-10-31 11:00,,error: rate limit retries exhausted
 2025-10-31 15:00,,error: rate limit retries exhausted
 2026-02-12 19:06,,"Frame is completely dark and filled with digital noise; no pilings, seafloor, or water column are discernible, indicating a camera/lighting issue rather than true water clarity, so visibility cannot be reliably estimated."
+2026-02-13 06:19,5.0,"Very dark, turbid scene. Only the closest right piling is a vague dark mass with almost no texture; mid and far pilings are essentially lost in the haze. This corresponds to extremely poor visibility, under the 5 ft threshold."
