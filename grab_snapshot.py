@@ -40,6 +40,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 REPO_ROOT = Path(__file__).resolve().parent
 SNAP_BASE = REPO_ROOT / "snapshots"
+THUMB_BASE = REPO_ROOT / "docs" / "thumbnails"
 LAST7_DIR = REPO_ROOT / "docs" / "last7days"
 MONTHS_MANIFEST_FILE = REPO_ROOT / "docs" / "months.json"
 VISIBILITY_CSV = REPO_ROOT / "docs" / "visibility.csv"
@@ -131,6 +132,12 @@ def capture_snapshot(url: str, out_path: Path, headless: bool = True) -> None:
             img = img.resize((TARGET_W, TARGET_H), Image.LANCZOS)
             img.save(out_path)
 
+        # Generate thumbnail
+        thumb_path = THUMB_BASE / out_path.relative_to(SNAP_BASE).with_suffix(".jpg")
+        thumb_path.parent.mkdir(parents=True, exist_ok=True)
+        thumb_w = 480
+        thumb_h = int(img.height * thumb_w / img.width)
+        img.resize((thumb_w, thumb_h), Image.LANCZOS).save(thumb_path, "JPEG", quality=75)
 
     finally:
         driver.quit()
