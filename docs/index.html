@@ -505,8 +505,8 @@
         history.replaceState({ view: 'months' }, '', '/');
       }
       setBreadcrumb(['Home']);
-      await loadLast7DaysImages();
       renderVisibilityChart(contentDiv);
+      await loadLast7DaysImages();
 
       const heading = document.createElement('h2');
       heading.textContent = 'Browse historical pictures';
