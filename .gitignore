@@ -1,4 +1,2 @@
 .env
 __pycache__/
-estimate_visibility.py
-estimate_visibility_llm.py
