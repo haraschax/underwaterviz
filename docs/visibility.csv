@@ -2336,3 +2336,4 @@ timestamp,visibility_ft,conditions
 2025-10-31 16:00,5.0,"Only the nearest 4 ft piling at the right edge is clearly visible with texture; no distinct mid or far pilings are discernible in the hazy water column, indicating very low visibility."
 2025-10-31 11:00,,error: rate limit retries exhausted
 2025-10-31 15:00,,error: rate limit retries exhausted
+2026-02-12 19:06,,"Frame is completely dark and filled with digital noise; no pilings, seafloor, or water column are discernible, indicating a camera/lighting issue rather than true water clarity, so visibility cannot be reliably estimated."
