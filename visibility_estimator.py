@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 visibility_estimator.py — Estimate underwater visibility (in feet) from
-Scripps Pier camera snapshots using OpenAI's o3 vision model.
+Scripps Pier camera snapshots using OpenAI's gpt-5.1 vision model.
 
 Can be used as a module:
     from visibility_estimator import estimate_visibility
@@ -19,7 +19,9 @@ import time
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent
-REFERENCE_IMAGE = REPO_ROOT / "reference" / "great_visibility.png"
+LABELED_IMAGE = REPO_ROOT / "reference" / "labeled_viz.png"
+GREAT_VIS_IMAGE = REPO_ROOT / "reference" / "great_visibility_35ft.png"
+GOOD_VIS_IMAGE = REPO_ROOT / "reference" / "good_visibility_25ft.png"
 
 SYSTEM_PROMPT = """\
 You are an expert marine biologist and underwater visibility analyst for the \
@@ -33,13 +35,16 @@ the pier pilings. The pilings serve as distance markers:
 - Back-left piling: ~14 ft (4.3m) from camera
 - Farthest visible pilings (center-left): ~30 ft (9m) from camera
 
-You will be shown a reference image of exceptional ~35ft visibility first, \
-then the image to evaluate.
+You will be shown three reference images before the image to evaluate:
+1. A labeled diagram showing which piling is at 4ft, 11ft, 14ft, and 30ft (~25ft visibility).
+2. A ~35ft exceptional visibility image where all pilings are sharp with texture and the sandy bottom is visible.
+3. A ~25ft good visibility image where the 30ft pilings are faintly visible as silhouettes.
+Use these to calibrate your estimates.
 
 Visibility estimation guidelines (use the FULL range, do not round conservatively):
 - If the 30ft pilings are clearly visible with sharp texture AND you can see \
 the sandy bottom: 35 ft
-- If the 30ft pilings are mostly visibile, but less clear than the reference: 30ft
+- If the 30ft pilings are mostly visible, but less clear than the reference: 30ft
 - If the 30ft pilings are faintly visible as silhouettes: 25ft
 - If the 14ft piling is sharp with visible texture: 20 ft
 - If the 14ft piling is hazy/faded silhouette: 15 ft
@@ -85,15 +90,32 @@ def estimate_visibility(image_path):
     suffix = Path(image_path).suffix.lower()
     media_type = "image/png" if suffix == ".png" else "image/jpeg"
 
-    content = [
-        {"type": "text", "text": "Reference image (~35ft exceptional visibility):"},
-    ]
-    if REFERENCE_IMAGE.exists():
-        ref_b64 = _encode_image(REFERENCE_IMAGE)
+    content = []
+
+    # 1) Labeled diagram
+    if LABELED_IMAGE.exists():
+        content.append({"type": "text", "text": "Labeled diagram (~25ft visibility) showing piling distances from camera:"})
         content.append({
             "type": "image_url",
-            "image_url": {"url": f"data:image/png;base64,{ref_b64}"},
+            "image_url": {"url": f"data:image/png;base64,{_encode_image(LABELED_IMAGE)}"},
         })
+
+    # 2) Great visibility (~35ft)
+    if GREAT_VIS_IMAGE.exists():
+        content.append({"type": "text", "text": "Reference: ~35ft exceptional visibility. All pilings sharp with texture, sandy bottom visible:"})
+        content.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/png;base64,{_encode_image(GREAT_VIS_IMAGE)}"},
+        })
+
+    # 3) Good visibility (~25ft)
+    if GOOD_VIS_IMAGE.exists():
+        content.append({"type": "text", "text": "Reference: ~25ft good visibility. 30ft pilings faintly visible as silhouettes:"})
+        content.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/png;base64,{_encode_image(GOOD_VIS_IMAGE)}"},
+        })
+
     content.append({"type": "text", "text": USER_PROMPT})
     content.append({
         "type": "image_url",
@@ -104,7 +126,7 @@ def estimate_visibility(image_path):
     for attempt in range(max_retries):
         try:
             response = client.chat.completions.create(
-                model="o3",
+                model="gpt-5.1",
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": content},
