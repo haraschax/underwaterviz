@@ -2353,3 +2353,4 @@ timestamp,visibility_ft,conditions
 2026-02-13 19:52,,"Frame is completely obscured by digital noise/static; no pilings, seafloor, or water column features are discernible, so an underwater visibility estimate cannot be made."
 2026-02-14 06:09,,"Image is extremely dark and noisy; no clear view of pilings, seafloor, or water column. Camera appears to be in low-light/noise state, preventing any reliable visibility estimate."
 2026-02-14 07:08,5.0,"The closest 4 ft piling at right is clear with good texture. The mid-right 11 ft piling is only barely discernible as a very hazy silhouette, and the farther 14–30 ft pilings blend into the green background. This matches conditions where only the nearest piling is clearly visible."
+2026-02-14 08:08,,"Image shows an offline message webpage, not an underwater view, so visibility cannot be assessed."
