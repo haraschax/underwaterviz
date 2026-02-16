@@ -2378,3 +2378,4 @@ timestamp,visibility_ft,conditions
 2026-02-15 17:37,5.0,"Only the nearest right piling edge is barely visible as a dark blur; no clear structure or other pilings are discernible, indicating extremely poor visibility, likely less than the 4 ft nearest marker."
 2026-02-15 19:05,,"Frame shows only sensor noise/static with no discernible pilings, seafloor, or underwater scene, so a reliable visibility estimate is impossible."
 2026-02-16 06:21,5.0,"Image is very murky; only vague dark bands of nearer pilings are visible as silhouettes without any clear texture. Mid and far pilings blend into the haze and bottom is not visible. This corresponds to very poor water clarity, under the 5 ft threshold."
+2026-02-16 07:18,5.0,"Closest 4 ft piling at right is sharp with clear texture. The 11 ft piling is barely distinguishable, and the 14 ft/30 ft pilings fade into the green haze as indistinct shapes. This matches conditions where only the nearest piling is really clear."
