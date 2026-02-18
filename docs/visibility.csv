@@ -2405,3 +2405,4 @@ timestamp,visibility_ft,conditions
 2026-02-17 19:04,,"Frame shows only uniform digital noise/static with no discernible pilings, seafloor, or underwater scene, indicating a camera malfunction or invalid snapshot. Visibility cannot be reliably estimated."
 2026-02-18 06:21,5.0,"Very turbid, dark water. Only the nearest right-hand piling is discernible as a silhouette with almost no texture, and mid/far pilings are completely obscured. This matches conditions of <5 ft visibility."
 2026-02-18 07:20,,error: could not convert string to float: '<5'
+2026-02-18 08:22,5.0,"Very turbid green water. The closest 4 ft piling on the right edge is visible with texture, but the 11 ft piling and beyond are essentially obscured; only an extremely faint shape farther back with no detail. This corresponds to seeing only the nearest clear piling."
