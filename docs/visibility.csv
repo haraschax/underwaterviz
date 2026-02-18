@@ -2406,3 +2406,4 @@ timestamp,visibility_ft,conditions
 2026-02-18 06:21,5.0,"Very turbid, dark water. Only the nearest right-hand piling is discernible as a silhouette with almost no texture, and mid/far pilings are completely obscured. This matches conditions of <5 ft visibility."
 2026-02-18 07:20,,error: could not convert string to float: '<5'
 2026-02-18 08:22,5.0,"Very turbid green water. The closest 4 ft piling on the right edge is visible with texture, but the 11 ft piling and beyond are essentially obscured; only an extremely faint shape farther back with no detail. This corresponds to seeing only the nearest clear piling."
+2026-02-18 09:26,5.0,"Water is very green and opaque. Only a faint outline of the nearest right-hand piling is barely visible; no mid or far pilings or bottom can be seen. This indicates extremely poor visibility, well under the 4 ft piling distance."
