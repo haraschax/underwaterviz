@@ -2411,3 +2411,4 @@ timestamp,visibility_ft,conditions
 2026-02-18 11:22,5.0,"Image is a uniformly green, very murky field with no visible pier pilings, structures, or clear seafloor texture. This indicates extremely poor water clarity, with visibility less than the nearest 4 ft piling distance."
 2026-02-18 12:15,,"Camera is tilted toward the seafloor; only the sandy bottom is visible with no identifiable pier pilings at 4, 11, 14, or 30 ft. Without any distance markers, a reliable visibility estimate relative to the standard piling distances cannot be made."
 2026-02-18 13:15,,"Frame is completely obscured by murky water or lens obstruction; no pilings or distance markers are visible, so a reliable visibility estimate cannot be made."
+2026-02-18 14:11,,"Frame is uniformly green-brown with no discernible pilings, seafloor, or structural features; likely lens obstruction or camera malfunction, so a reliable distance-based visibility estimate cannot be made."
