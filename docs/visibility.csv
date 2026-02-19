@@ -2413,3 +2413,4 @@ timestamp,visibility_ft,conditions
 2026-02-18 13:15,,"Frame is completely obscured by murky water or lens obstruction; no pilings or distance markers are visible, so a reliable visibility estimate cannot be made."
 2026-02-18 14:11,,"Frame is uniformly green-brown with no discernible pilings, seafloor, or structural features; likely lens obstruction or camera malfunction, so a reliable distance-based visibility estimate cannot be made."
 2026-02-18 15:11,,Frame is almost completely obscured by greenish haze and close turbidity with no identifiable pier pilings or distance markers; cannot reliably determine visibility.
+2026-02-18 16:29,,"Frame is a uniform greenish-brown field with no discernible pilings, seafloor, or other reference objects; likely camera is obscured or extremely close to a surface, so a reliable underwater visibility estimate cannot be made."
