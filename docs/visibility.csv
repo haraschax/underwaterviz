@@ -2424,3 +2424,4 @@ timestamp,visibility_ft,conditions
 2026-02-19 11:23,,error: could not convert string to float: '<5'
 2026-02-19 12:11,,"Frame is completely black with no visible pilings, seafloor, or underwater scene, likely camera offline or lens fully obscured; cannot derive a reliable visibility estimate."
 2026-02-19 13:12,5.0,"Frame is extremely murky green with only a faint outline of the nearest right-hand piling; no distinct structure or distance markers are visible, indicating very poor water clarity (<5 ft)."
+2026-02-19 15:11,,"Frame is completely black with no visible pilings, seafloor, or water column; likely camera offline or lens fully obscured, so visibility cannot be determined."
