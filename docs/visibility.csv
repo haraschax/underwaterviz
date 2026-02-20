@@ -2431,3 +2431,4 @@ timestamp,visibility_ft,conditions
 2026-02-20 06:18,,"Frame is uniformly dark and murky with no discernible pier pilings, seafloor, or other reference structures visible, preventing a reliable visibility estimate."
 2026-02-20 07:17,,"Frame is uniformly green and completely blurred with no visible pilings, seafloor, or other reference objects. This appears to be an invalid snapshot (camera blocked or badly out of focus), so a reliable visibility estimate cannot be made."
 2026-02-20 08:16,,"Frame is a uniform green haze with no visible pilings, seafloor, or recognizable structures, preventing any reliable distance-based visibility estimate."
+2026-02-20 09:16,3.0,"Frame is a uniform green haze with no discernible pilings, seafloor, or other fixed structures. Barely anything is visible, indicating extremely poor water clarity well under the distance to the nearest (4 ft) piling."
