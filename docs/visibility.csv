@@ -2435,3 +2435,4 @@ timestamp,visibility_ft,conditions
 2026-02-20 10:20,,error: could not convert string to float: '<5'
 2026-02-20 11:17,4.0,"Frame is almost entirely a green-brown haze with no discernible pilings; even the nearest 4 ft piling is not visible, indicating extremely poor visibility (<5 ft)."
 2026-02-20 12:10,,"Frame is almost entirely a greenish blur with no clearly discernible pilings or bottom; only vague shading on the right edge, preventing any reliable distance-based visibility estimate."
+2026-02-20 13:08,,"Frame is almost entirely a uniform green haze with indistinct blotches; no pier pilings or clear structural features are visible, so distance markers cannot be used and visibility cannot be reliably quantified."
