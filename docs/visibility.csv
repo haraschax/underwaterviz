@@ -2426,3 +2426,4 @@ timestamp,visibility_ft,conditions
 2026-02-19 13:12,5.0,"Frame is extremely murky green with only a faint outline of the nearest right-hand piling; no distinct structure or distance markers are visible, indicating very poor water clarity (<5 ft)."
 2026-02-19 15:11,,"Frame is completely black with no visible pilings, seafloor, or water column; likely camera offline or lens fully obscured, so visibility cannot be determined."
 2026-02-19 16:25,5.0,"Frame is extremely murky green with only a vague outline of the nearest piling at the far right edge; no distinct structure or texture even at ~4 ft. This indicates very poor visibility, but it is still an underwater view, not a malfunction."
+2026-02-19 17:37,,"Frame is uniformly green-brown with no discernible pilings, seafloor, or other reference objects; likely extreme turbidity or the camera looking into a fouled/obstructed view, so a reliable distance-based visibility estimate cannot be made."
