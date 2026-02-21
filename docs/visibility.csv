@@ -2451,3 +2451,4 @@ timestamp,visibility_ft,conditions
 2026-02-21 12:06,,"Frame is heavily obscured by turbidity or something on the lens; pier pilings and distance markers are not discernible, so a reliable visibility estimate cannot be made."
 2026-02-21 13:06,,"Frame is extremely blurred/obscured; pier pilings and distance markers are not discernible, so a reliable visibility estimate cannot be made."
 2026-02-21 14:06,,"Frame is extremely blurred/obscured; pier pilings and distance markers are not discernible, so a reliable underwater visibility estimate cannot be made."
+2026-02-21 15:08,4.0,"Frame is almost completely obscured by turbidity; only a very vague outline of a single piling at the far right edge and some indistinct shadows are visible. No clear view of 4 ft, 11 ft, 14 ft, or 30 ft pilings, so distance-based calibration is not possible. Conditions qualify as barely anything visible."
