@@ -2448,3 +2448,4 @@ timestamp,visibility_ft,conditions
 2026-02-21 09:08,,"Image is extremely blurred with no clearly discernible pilings or distance markers; camera appears out of focus, preventing a reliable visibility estimate."
 2026-02-21 10:09,,"Frame is extremely blurred/obscured, with only vague color gradients and no discernible pilings or bottom, so a reliable distance-based visibility estimate cannot be made."
 2026-02-21 11:09,,Image is extremely blurred with no clearly distinguishable pilings or distance markers; cannot reliably assess underwater visibility.
+2026-02-21 12:06,,"Frame is heavily obscured by turbidity or something on the lens; pier pilings and distance markers are not discernible, so a reliable visibility estimate cannot be made."
