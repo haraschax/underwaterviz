@@ -2444,3 +2444,4 @@ timestamp,visibility_ft,conditions
 2026-02-20 19:48,,"Frame is completely obscured by digital noise/static; no pilings, seafloor, or water column are visible, so underwater visibility cannot be determined."
 2026-02-21 06:08,4.0,"Frame is almost entirely a uniform greenish blur with no discernible pilings, seafloor, or structures; water appears highly turbid/obscured so distance markers cannot be seen at all, indicating extremely poor visibility well under 5 ft."
 2026-02-21 07:07,,"Frame is extremely blurred/obstructed; pier pilings and distance markers are not discernible, so a reliable visibility estimate cannot be made."
+2026-02-21 08:07,,"Frame is extremely blurred and obscured, likely due to turbidity or lens obstruction. Pier pilings and distance markers are not discernible, so a reliable visibility estimate cannot be made."
