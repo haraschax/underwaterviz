@@ -2457,3 +2457,4 @@ timestamp,visibility_ft,conditions
 2026-02-21 19:04,,"Frame is entirely dark static/noise with no discernible pilings, seafloor, or water column features, indicating a camera malfunction or unusable image; visibility cannot be assessed."
 2026-02-22 06:09,,"Frame is an almost uniform greenish blur with no discernible pier pilings, seafloor, or other fixed reference features. This suggests either extreme turbidity, lens obstruction, or camera malfunction, making a quantitative visibility estimate impossible."
 2026-02-22 07:07,,"Frame is extremely blurred/obscured, likely by turbidity or something close to the lens; pier pilings and distance markers are not discernible, so a reliable visibility estimate cannot be made."
+2026-02-22 08:08,,"Frame is extremely blurry with no clearly defined pilings or seafloor visible; cannot reliably distinguish standard distance markers, so a quantitative visibility estimate is not possible."
