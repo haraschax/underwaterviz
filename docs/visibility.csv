@@ -2504,3 +2504,4 @@ timestamp,visibility_ft,conditions
 2026-02-25 15:12,5.0,"Only the closest 4 ft piling on the right is clear with texture. The mid-right (~11 ft) piling is extremely hazy and barely discernible, and farther pilings are not visible. This corresponds to very poor conditions where only the nearest piling is clearly seen."
 2026-02-25 17:36,5.0,"Only the nearest piling at ~4 ft is partially visible on the far right; all other pilings and bottom are completely obscured by murky water, indicating extremely poor visibility under 5 ft."
 2026-02-25 19:01,,"Image is dominated by sensor noise/static with no discernible underwater scene, pilings, or seafloor visible, indicating a camera malfunction or unusable frame; visibility cannot be reliably estimated."
+2026-02-25 19:55,,"Frame is entirely dark/static noise with no discernible underwater scene or pilings, indicating a camera malfunction or invalid snapshot; visibility cannot be determined."
