@@ -2521,3 +2521,4 @@ timestamp,visibility_ft,conditions
 2026-02-26 19:54,,"Frame shows a reconnecting/offline screen, not an underwater view, so visibility cannot be assessed."
 2026-02-27 06:17,5.0,"Only the closest right-edge piling is partially visible with very low contrast; mid and far pilings are completely obscured in green haze, indicating very turbid water and extremely short viewing distance."
 2026-02-27 07:17,5.0,Only the nearest 4 ft piling on the right edge is clearly visible with texture; mid and far pilings are essentially lost in green haze. This corresponds to very poor conditions where only the closest piling is clear.
+2026-02-27 08:13,5.0,"Only the nearest 4 ft piling on the right is clearly visible; the 11 ft piling is barely suggested as a very faint shape without detail, and more distant pilings are not discernible. This corresponds to very poor water clarity."
