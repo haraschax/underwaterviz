@@ -2518,3 +2518,4 @@ timestamp,visibility_ft,conditions
 2026-02-26 16:27,5.0,"Only one nearby piling is visible at the right edge with clear texture; no mid or far pilings are discernible and the background fades into uniform haze, indicating visibility just to the closest structure."
 2026-02-26 17:36,5.0,"Only one piling at the far right edge is faintly visible; no mid or far pilings, and the water column is very murky with no clear bottom, indicating extremely poor visibility."
 2026-02-26 19:00,,"Frame is dominated by sensor noise/static with no discernible pilings, seafloor, or underwater scene, indicating a malfunction or unusable snapshot, so a reliable visibility estimate cannot be made."
+2026-02-26 19:54,,"Frame shows a reconnecting/offline screen, not an underwater view, so visibility cannot be assessed."
