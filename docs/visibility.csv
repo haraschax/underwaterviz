@@ -2532,3 +2532,4 @@ timestamp,visibility_ft,conditions
 2026-02-27 16:23,5.0,Only the nearest piling on the right edge is clearly visible with texture; more distant pilings quickly fade into haze and are indistinct. This corresponds to visibility limited to about the 4–5 ft range from the camera.
 2026-02-27 17:35,5.0,"Only the nearest 4 ft piling at the right edge is clearly visible with texture; mid and far pilings are not discernible in the haze, indicating very limited water clarity."
 2026-02-27 18:50,,"Frame is entirely dark with sensor noise and no discernible pilings, seafloor, or underwater scene, indicating a non-usable/malfunction snapshot so visibility cannot be estimated."
+2026-02-27 19:39,,"Frame shows only sensor noise/static with no discernible pilings, seafloor, or underwater scene, so a visibility estimate cannot be made."
