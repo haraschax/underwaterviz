@@ -2557,3 +2557,4 @@ timestamp,visibility_ft,conditions
 2026-03-01 19:02,,"Frame is full of digital noise/static with no discernible pilings or seafloor, indicating a camera malfunction or unusable image. Visibility cannot be determined."
 2026-03-02 07:17,5.0,Only the closest 4 ft piling on the right edge is clearly visible with texture; the 11 ft piling is not visible at all and the background quickly fades into uniform green haze. This matches the 5 ft criterion.
 2026-03-02 08:15,5.0,"Only the nearest right-edge piling is partially visible and quite hazy; mid and distant pilings and bottom are completely obscured in green water, indicating very short range."
+2026-03-02 09:19,5.0,"Only the closest 4 ft piling on the right edge is clearly visible with texture; mid and far pilings are not discernible in the green haze, indicating very limited range."
