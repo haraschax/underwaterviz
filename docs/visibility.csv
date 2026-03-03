@@ -2567,3 +2567,4 @@ timestamp,visibility_ft,conditions
 2026-03-02 16:27,5.0,Only the nearest 4ft piling is partially visible on the far right edge; no 11ft or farther pilings are discernible and the water is very murky. This corresponds to very poor visibility where only the closest piling is clear.
 2026-03-02 17:37,5.0,"Only a single piling is barely visible at the far right edge and quickly fades; no other pilings or bottom are visible, indicating extremely poor water clarity with less than the distance to the nearest 4 ft piling."
 2026-03-02 19:05,,"Frame is entirely noisy/static with no discernible pilings, seafloor, or underwater scene, indicating a camera malfunction or non-underwater snapshot. Visibility cannot be reliably estimated."
+2026-03-03 06:47,5.0,"Only the nearest 4 ft piling is partially visible and quickly fades into green murk; no 11 ft or farther pilings are discernible, indicating very limited water clarity."
