@@ -2581,3 +2581,4 @@ timestamp,visibility_ft,conditions
 2026-03-03 17:36,10.0,Only the nearest right-edge piling is clearly visible; mid/14ft pilings are extremely faint silhouettes and 30ft pilings are not discernible. This corresponds to very limited range beyond the 11ft marker.
 2026-03-03 18:58,,"Frame shows only dark sensor noise with no discernible pilings, seafloor, or underwater scene, indicating a camera malfunction or non-underwater snapshot; visibility cannot be reliably estimated."
 2026-03-03 19:51,,"Frame is entirely camera noise/static with no discernible pilings, seafloor, or water column visible, so underwater visibility cannot be determined."
+2026-03-04 06:17,5.0,Closest 4ft piling on right is clear with some texture. The 11ft piling is only a faint silhouette and the 14ft/30ft pilings are essentially lost in haze. This corresponds to visibility slightly beyond the 4ft piling but not reaching a clear 11ft view.
