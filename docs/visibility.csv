@@ -2614,3 +2614,4 @@ timestamp,visibility_ft,conditions
 2026-03-06 10:14,5.0,Only the nearest piling on the right edge is barely visible; no clear view of mid or distant pilings and overall water is very murky green. This corresponds to visibility limited to just the closest 4 ft piling.
 2026-03-06 11:16,5.0,"Only the nearest 4 ft piling at the right edge is partially visible; all other pilings are completely obscured by very green, turbid water. This corresponds to extremely poor conditions where only the closest structure is discernible."
 2026-03-06 12:09,5.0,"Only the nearest 4 ft piling on the right edge is faintly visible; all more distant pilings are lost in green haze, indicating extremely poor water clarity (<5 ft)."
+2026-03-06 13:09,5.0,"Only the nearest 4 ft piling on the right edge is partly visible; mid and far pilings are completely obscured by very turbid green water, indicating extremely poor visibility."
