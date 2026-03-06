@@ -2607,3 +2607,4 @@ timestamp,visibility_ft,conditions
 2026-03-05 17:37,5.0,"Only the closest right-edge piling is partially visible and quite hazy; mid and farther pilings are not discernible at all, indicating very poor water clarity with visibility limited to just beyond the nearest piling."
 2026-03-05 19:00,,"Frame is entirely dark/static noise with no discernible pilings, seafloor, or underwater scene, likely a camera malfunction or night-time noise image; visibility cannot be determined."
 2026-03-05 19:53,,"Frame is entirely dark with sensor noise and no discernible pilings, seafloor, or underwater scene, indicating a malfunction or nighttime non-use frame. Visibility cannot be assessed."
+2026-03-06 06:16,5.0,"Only the closest 4 ft piling at right edge is clearly visible with texture; the mid/right and farther pilings are barely perceptible hazy shapes and offer no detail. Conditions are very murky, so visibility is limited to just around the nearest piling distance."
