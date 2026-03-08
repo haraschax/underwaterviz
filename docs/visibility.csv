@@ -2636,3 +2636,4 @@ timestamp,visibility_ft,conditions
 2026-03-07 19:03,,"Frame is fully obscured by digital noise/static with no discernible pilings or seafloor, indicating a camera malfunction or unusable image, so visibility cannot be determined."
 2026-03-08 06:19,,"Frame is full of digital noise/static with no discernible pilings, seafloor, or underwater scene, so visibility cannot be reliably assessed."
 2026-03-08 07:07,,"Frame is largely obscured by a greenish blur, likely particulate or something on/near the lens. Only vague outlines of a very close piling are barely discernible; distance markers (4, 11, 14, 30 ft pilings) cannot be reliably identified, so a quantitative visibility estimate is not possible."
+2026-03-08 08:07,10.0,"Closest 4 ft piling on right is clear; 11 ft piling is visible but very hazy, and 14/30 ft pilings are not discernible. This corresponds to only the 11 ft piling being meaningfully visible."
