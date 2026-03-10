@@ -2662,3 +2662,4 @@ timestamp,visibility_ft,conditions
 2026-03-09 19:59,,"Frame is completely dark with sensor noise; no pier pilings, seafloor, or any underwater features are discernible, so a visibility estimate cannot be made."
 2026-03-10 06:30,,"Frame is completely obscured by sensor noise/static with no visible pilings, seafloor, or water column, indicating a camera malfunction or invalid snapshot. Visibility cannot be reliably assessed."
 2026-03-10 07:20,10.0,"Closest 4 ft piling at right edge is clear with some texture, but the 11 ft and farther pilings are very hazy silhouettes with little detail. This corresponds to visibility around the 11 ft piling distance."
+2026-03-10 08:22,5.0,"Only the closest piling at ~4 ft is clear with visible structure; the 11 ft piling is barely discernible as a hazy silhouette and farther pilings are not visible at all. This corresponds to very low visibility, dominated by turbidity and backscatter near the camera."
