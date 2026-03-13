@@ -2702,3 +2702,4 @@ timestamp,visibility_ft,conditions
 2026-03-13 09:13,,"Image is an extreme close-up and completely out of focus; pier pilings and distance markers are not visible, so water-column visibility cannot be determined."
 2026-03-13 10:15,,"Image shows a close-up of a diver and gear blocking the view; pier pilings and distances cannot be seen, so underwater visibility cannot be reliably estimated."
 2026-03-13 11:14,30.0,"The sandy bottom is clearly visible and detailed. The far (~30 ft) piling in the center is visible but somewhat hazy, with less texture than the 35 ft reference yet more distinct than a faint silhouette. Overall clarity suggests visibility beyond 25 ft but not fully exceptional."
+2026-03-13 12:15,25.0,"Closest and mid pilings are sharp with texture. The back-left/center pilings around 30 ft are visible but only as soft silhouettes, not sharp. Sandy bottom is visible but hazy. This matches the ~25 ft reference more than the 30–35 ft cases."
