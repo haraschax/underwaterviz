@@ -2765,3 +2765,4 @@ timestamp,visibility_ft,conditions
 2026-03-18 08:30,,"Frame is extremely out of focus and dominated by close-up blurry shapes; no pier pilings or distance markers are discernible, so true water visibility cannot be determined."
 2026-03-18 10:06,,"Frame is completely out of focus with no discernible pilings, seafloor, or distance markers visible, making an underwater visibility estimate impossible."
 2026-03-18 10:50,,Image is extremely out of focus with no discernible pilings or distance markers; cannot reliably assess underwater visibility.
+2026-03-18 11:24,15.0,"Closest 4 ft piling on right is clear with texture. The mid-right (~11 ft) piling is visible but quite hazy, and the back-left (~14 ft) pilings are only faint silhouettes without detail. No clear 30 ft pilings. This matches the 15 ft category where the 14 ft piling is a hazy silhouette."
