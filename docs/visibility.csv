@@ -2764,3 +2764,4 @@ timestamp,visibility_ft,conditions
 2026-03-18 07:33,,"Frame is extremely out of focus with no discernible pilings, seafloor, or distance markers visible, so visibility cannot be reliably estimated."
 2026-03-18 08:30,,"Frame is extremely out of focus and dominated by close-up blurry shapes; no pier pilings or distance markers are discernible, so true water visibility cannot be determined."
 2026-03-18 10:06,,"Frame is completely out of focus with no discernible pilings, seafloor, or distance markers visible, making an underwater visibility estimate impossible."
+2026-03-18 10:50,,Image is extremely out of focus with no discernible pilings or distance markers; cannot reliably assess underwater visibility.
