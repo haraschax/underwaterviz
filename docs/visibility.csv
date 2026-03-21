@@ -2800,3 +2800,4 @@ timestamp,visibility_ft,conditions
 2026-03-21 06:20,,"Frame appears to be mostly digital noise/static with no discernible pilings, seafloor, or underwater scene, suggesting a camera malfunction or unusable image, so a reliable visibility estimate cannot be made."
 2026-03-21 07:09,,"The image shows a webpage with an error/placeholder icon where the live camera feed should be; there is no valid underwater view of the pilings, so visibility cannot be determined."
 2026-03-21 08:08,,"The image shows the Coastal Ocean Observing Lab webpage with an empty/offline camera frame, not an underwater view, so visibility cannot be assessed."
+2026-03-21 09:08,15.0,"Closest 4 ft piling on right is sharp; mid-distance pilings (~11–14 ft) appear as dark, hazy silhouettes with little to no texture, and farther 30 ft pilings are not discernible. This matches conditions where the 14 ft piling is a hazy silhouette."
