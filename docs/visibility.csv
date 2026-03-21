@@ -2799,3 +2799,4 @@ timestamp,visibility_ft,conditions
 2026-03-20 19:56,,"Frame shows only sensor noise/static with no discernible underwater scene or pilings, indicating a camera malfunction or darkness; visibility cannot be determined."
 2026-03-21 06:20,,"Frame appears to be mostly digital noise/static with no discernible pilings, seafloor, or underwater scene, suggesting a camera malfunction or unusable image, so a reliable visibility estimate cannot be made."
 2026-03-21 07:09,,"The image shows a webpage with an error/placeholder icon where the live camera feed should be; there is no valid underwater view of the pilings, so visibility cannot be determined."
+2026-03-21 08:08,,"The image shows the Coastal Ocean Observing Lab webpage with an empty/offline camera frame, not an underwater view, so visibility cannot be assessed."
