@@ -3218,3 +3218,4 @@ timestamp,visibility_ft,conditions
 2026-04-22 18:37,,"Image shows the stream offline webpage with no underwater view, so visibility cannot be assessed."
 2026-04-23 06:36,,"Image shows the website message 'We're sorry, this live stream is currently offline!' rather than an underwater view, so no pilings or water conditions are visible and visibility cannot be estimated."
 2026-04-23 07:48,,"Image shows an offline webpage message, not an underwater camera view, so visibility cannot be assessed."
+2026-04-23 08:38,,"Image shows an offline message webpage, not an underwater view, so visibility cannot be determined."
