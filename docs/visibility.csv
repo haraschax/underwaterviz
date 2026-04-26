@@ -3254,3 +3254,4 @@ timestamp,visibility_ft,conditions
 2026-04-25 16:15,,"Image shows an offline message webpage, not an underwater camera view, so visibility cannot be assessed."
 2026-04-25 17:37,,"Image shows an offline webpage with no underwater scene or pilings visible, so visibility cannot be determined."
 2026-04-25 18:37,,"The snapshot shows an offline message webpage rather than an underwater view, so no pilings or water column are visible and visibility cannot be determined."
+2026-04-26 06:32,,"The snapshot shows the Scripps Pier webpage with an offline message, not an underwater camera view, so no pilings or water conditions are visible to estimate visibility."
