@@ -3326,3 +3326,4 @@ timestamp,visibility_ft,conditions
 2026-05-01 12:30,,"Image shows an offline/error page with no underwater scene or visible pilings, so visibility cannot be assessed."
 2026-05-01 13:21,,"The image shows a website message indicating the live stream is offline, not an actual underwater frame, so visibility cannot be assessed."
 2026-05-01 14:20,,"Image shows an offline message webpage, not an underwater view, so visibility cannot be assessed."
+2026-05-01 15:19,,"Image shows an offline webpage with no underwater scene visible, so visibility cannot be assessed."
