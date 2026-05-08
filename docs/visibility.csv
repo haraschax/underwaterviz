@@ -3412,3 +3412,4 @@ timestamp,visibility_ft,conditions
 2026-05-08 10:33,,"Image shows an offline webpage message, not an underwater camera snapshot, so visibility cannot be determined."
 2026-05-08 11:34,,"Image shows an offline webpage message, not an underwater snapshot, so visibility cannot be determined."
 2026-05-08 12:33,,"Image shows an offline webpage with no underwater view, so visibility cannot be determined."
+2026-05-08 13:25,,"The image shows a webpage message indicating the live stream is currently offline, not an underwater view, so visibility cannot be assessed."
