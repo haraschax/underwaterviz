@@ -3447,3 +3447,4 @@ timestamp,visibility_ft,conditions
 2026-05-11 10:00,,"Image shows an offline webpage with text 'We're sorry, this live stream is currently offline!' and no underwater scene, so visibility cannot be determined."
 2026-05-11 10:45,,"Image shows an offline message webpage, not an underwater camera view, so visibility cannot be estimated."
 2026-05-11 11:41,,"The image shows the Scripps Pier live stream offline webpage, not an underwater camera view, so underwater visibility cannot be assessed."
+2026-05-11 12:35,,"The image shows the Scripps Pier live stream offline message and not an underwater view, so no pilings or water column are visible. A visibility estimate cannot be made."
