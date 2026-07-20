@@ -4156,3 +4156,4 @@ timestamp,visibility_ft,conditions
 2026-07-19 16:55,5.0,Only the closest 4 ft piling on the right side is clearly visible with texture. No mid or far pilings or bottom are visible; the water quickly fades to green haze. This matches the 5 ft criterion.
 2026-07-19 19:44,5.0,"Only the nearest right-hand piling is partially visible with limited texture; no mid or far pilings or bottom are discernible, indicating very poor water clarity (<5 ft)."
 2026-07-20 08:11,5.0,"The closest 4 ft piling at right is sharp with clear texture. The 11 ft piling is not distinctly visible, and only a very faint shadow of a farther piling appears with no detail. This indicates visibility limited essentially to the nearest piling."
+2026-07-20 11:01,,"A large dark object (likely a cable or hose) is blocking the central field of view and key pilings, preventing identification of 4ft, 11ft, 14ft, or 30ft markers, so a reliable distance-based visibility estimate cannot be made."
