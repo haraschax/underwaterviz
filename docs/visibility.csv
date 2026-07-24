@@ -4184,3 +4184,4 @@ timestamp,visibility_ft,conditions
 2026-07-23 19:56,5.0,"Only the closest 4 ft piling at the right edge is barely distinguishable; all other pilings and the background fade into uniform haze, indicating extremely poor visibility, below the 5 ft category."
 2026-07-24 06:39,5.0,"Only the closest right-edge piling is barely visible as a dark shape; no mid or far pilings or bottom are discernible, indicating extremely poor water clarity, near the minimum readable distance."
 2026-07-24 08:24,5.0,"Only the nearest 4 ft piling at the right edge is partially visible; everything beyond quickly fades into green haze with no discernible mid or far pilings, indicating extremely poor water clarity."
+2026-07-24 10:29,5.0,Water is very green and turbid. Only the nearest 4 ft piling at the right edge is clearly visible with texture; the 11 ft piling and beyond are not discernible. This corresponds to extremely poor conditions with visibility limited to the closest piling.
