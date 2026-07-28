@@ -4216,3 +4216,4 @@ timestamp,visibility_ft,conditions
 2026-07-28 11:13,5.0,"Only the nearest piling at ~4 ft on the right edge is clearly visible; no mid or far pilings can be seen and the water column is very murky, indicating extremely low visibility."
 2026-07-28 13:15,5.0,"Only the nearest 4 ft piling on the right is clearly visible with texture; the mid and far pilings are not discernible, just uniform haze, indicating very short range."
 2026-07-28 15:03,5.0,Only the nearest right piling (4 ft) is clearly visible with texture; mid and far pilings are completely obscured by murky water. Background quickly fades to uniform green with no discernible structures beyond the closest piling.
+2026-07-28 16:57,5.0,"Closest 4 ft piling on right is sharp with clear texture. The 11 ft piling is extremely faint and the 14 ft/30 ft pilings are not discernible, with the background quickly fading into haze. This matches conditions where only the closest piling is clearly visible."
