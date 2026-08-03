@@ -379,26 +379,40 @@
     // --- Visibility chart ---
 
     function renderVisibilityChart(parent) {
-      // Collect ALL valid visibility points and group by date
+      // Collect ALL valid visibility points and group by date. Keep dates with
+      // invalid measurements too, so those days remain visible as gaps.
       const allPoints = [];
       const dailyPoints = {};
+      const recordedDates = new Set();
       for (const [key, val] of Object.entries(visibilityData)) {
-        if (val.visibility_ft == null || isNaN(val.visibility_ft)) continue;
         const date = key.substring(0, 10);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
+        recordedDates.add(date);
+        if (val.visibility_ft == null || isNaN(val.visibility_ft)) continue;
         const hour = parseInt(key.substring(11, 13), 10);
         allPoints.push({ date, hour, vis: val.visibility_ft });
         if (!dailyPoints[date]) dailyPoints[date] = [];
         dailyPoints[date].push(val.visibility_ft);
       }
 
-      const dates = Object.keys(dailyPoints).sort();
-      if (dates.length < 2) return;
+      const recordedDateList = Array.from(recordedDates).sort();
+      if (recordedDateList.length < 2 || allPoints.length === 0) return;
 
-      // Compute mean for each day (NaN values already filtered out)
+      // Use every calendar day on the x-axis. Building the axis only from
+      // measured days makes outages disappear and connects unrelated points.
+      const dayMs = 24 * 60 * 60 * 1000;
+      const firstDay = Date.parse(`${recordedDateList[0]}T00:00:00Z`);
+      const lastDay = Date.parse(`${recordedDateList[recordedDateList.length - 1]}T00:00:00Z`);
+      const dates = [];
+      for (let day = firstDay; day <= lastDay; day += dayMs) {
+        dates.push(new Date(day).toISOString().substring(0, 10));
+      }
+
+      // Compute a mean for measured days and leave missing days empty.
       function mean(arr) {
         return arr.reduce((a, b) => a + b, 0) / arr.length;
       }
-      const dailyMean = dates.map(d => mean(dailyPoints[d]));
+      const dailyMean = dates.map(d => dailyPoints[d] ? mean(dailyPoints[d]) : null);
 
       // Date index map for x-positioning
       const dateIdx = {};
@@ -515,11 +529,17 @@
       ctx.strokeStyle = '#222';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
+      let segmentOpen = false;
       for (let i = 0; i < dates.length; i++) {
+        if (dailyMean[i] == null) {
+          segmentOpen = false;
+          continue;
+        }
         const x = dateX(i);
         const y = visY(dailyMean[i]);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        if (segmentOpen) ctx.lineTo(x, y);
+        else ctx.moveTo(x, y);
+        segmentOpen = true;
       }
       ctx.stroke();
     }
