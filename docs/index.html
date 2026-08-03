@@ -17,6 +17,13 @@
     h1 {
       text-align: center;
       margin-top: 20px;
+      margin-bottom: 6px;
+    }
+    .tide-source {
+      margin: 0 0 20px;
+      text-align: center;
+      color: #666;
+      font-size: 13px;
     }
     #breadcrumb {
       margin: 20px 0;
@@ -103,6 +110,17 @@
       border-radius: 3px;
       color: white;
     }
+    .overlay-tide {
+      position: absolute;
+      top: 46px;
+      right: 8px;
+      padding: 4px 8px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 3px;
+      color: white;
+      background-color: rgba(0, 95, 150, 0.8);
+    }
     .loading {
       text-align: center;
       padding: 40px;
@@ -119,10 +137,24 @@
       border-radius: 3px;
       color: white;
     }
+    .tide-badge {
+      position: absolute;
+      top: 30px;
+      right: 4px;
+      padding: 3px 6px;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 3px;
+      color: white;
+      background-color: rgba(0, 95, 150, 0.8);
+    }
   </style>
 </head>
 <body>
   <h1>Scripps Underwater Camera Log</h1>
+  <p class="tide-source">
+    Tide levels are NOAA La Jolla station 9410230 observations, in feet relative to MLLW.
+  </p>
   <div id="breadcrumb"></div>
   <div id="content"></div>
 
@@ -145,8 +177,9 @@
     let currentYear = null;
     let currentMonth = null;
 
-    // Visibility data loaded from CSV
+    // Measurement data loaded from CSV
     let visibilityData = {};
+    let tideData = {};
 
     // Overlay for full-screen image view
     const overlay = document.createElement('div');
@@ -158,16 +191,19 @@
     overlayLabel.className = 'overlay-label';
     const overlayVis = document.createElement('div');
     overlayVis.className = 'overlay-vis';
+    const overlayTide = document.createElement('div');
+    overlayTide.className = 'overlay-tide';
     overlayContainer.appendChild(overlayImg);
     overlayContainer.appendChild(overlayLabel);
     overlayContainer.appendChild(overlayVis);
+    overlayContainer.appendChild(overlayTide);
     overlay.appendChild(overlayContainer);
     overlay.addEventListener('click', () => {
       overlay.style.display = 'none';
     });
     document.body.appendChild(overlay);
 
-    function openModal(src, alt = '', visFt = null, conditions = '') {
+    function openModal(src, alt = '', visFt = null, conditions = '', tideFt = null) {
       overlayImg.src = src;
       overlayImg.alt = alt;
       overlayLabel.textContent = alt;
@@ -180,6 +216,13 @@
         overlayVis.style.display = '';
       } else {
         overlayVis.style.display = 'none';
+      }
+      if (tideFt != null && !isNaN(tideFt)) {
+        overlayTide.textContent = `Tide ${tideFt.toFixed(1)} ft`;
+        overlayTide.title = 'NOAA La Jolla station 9410230; observed water level relative to MLLW';
+        overlayTide.style.display = '';
+      } else {
+        overlayTide.style.display = 'none';
       }
       overlay.style.display = 'flex';
     }
@@ -212,9 +255,32 @@
       }
     }
 
+    async function loadTideData() {
+      try {
+        const response = await fetch('tides.csv');
+        if (!response.ok) return;
+        const text = await response.text();
+        const lines = text.trim().split('\n');
+        for (let i = 1; i < lines.length; i++) {
+          const columns = lines[i].split(',');
+          if (columns.length < 2) continue;
+          const key = columns[0].trim().substring(0, 13);
+          const tideFt = parseFloat(columns[1]);
+          if (key && !isNaN(tideFt)) tideData[key] = tideFt;
+        }
+      } catch (e) {
+        console.error('Failed to load tide data:', e);
+      }
+    }
+
     function getVisibility(year, month, day, hour) {
       const key = `${year}-${month}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}`;
       return visibilityData[key] || null;
+    }
+
+    function getTide(year, month, day, hour) {
+      const key = `${year}-${month}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}`;
+      return tideData[key] ?? null;
     }
 
     function createVisBadge(visFt, conditions) {
@@ -233,6 +299,19 @@
         } else {
           badge.style.backgroundColor = 'rgba(200, 80, 0, 0.75)';
         }
+      }
+      return badge;
+    }
+
+    function createTideBadge(tideFt) {
+      const badge = document.createElement('div');
+      badge.className = 'tide-badge';
+      badge.title = 'NOAA La Jolla station 9410230; observed water level relative to MLLW';
+      if (tideFt == null || isNaN(tideFt)) {
+        badge.textContent = 'Tide n/a';
+        badge.style.backgroundColor = 'rgba(100, 100, 100, 0.75)';
+      } else {
+        badge.textContent = `Tide ${tideFt.toFixed(1)} ft`;
       }
       return badge;
     }
@@ -364,8 +443,11 @@
           const visFt = info.visibility_ft != null ? info.visibility_ft : null;
           const cond = info.conditions || '';
           wrapper.appendChild(createVisBadge(visFt, cond));
+          const [year, month, day] = info.date.split('-');
+          const tideFt = getTide(year, month, day, parseInt(info.time, 10));
+          wrapper.appendChild(createTideBadge(tideFt));
 
-          wrapper.addEventListener('click', () => openModal(img.src, dateLabel, visFt, cond));
+          wrapper.addEventListener('click', () => openModal(img.src, dateLabel, visFt, cond, tideFt));
           grid.appendChild(wrapper);
         });
 
@@ -713,8 +795,10 @@
         const visFt = visInfo ? visInfo.visibility_ft : null;
         const cond = visInfo ? visInfo.conditions : '';
         wrapper.appendChild(createVisBadge(visFt, cond));
+        const tideFt = getTide(info.year, info.month, info.day, hour);
+        wrapper.appendChild(createTideBadge(tideFt));
 
-        wrapper.addEventListener('click', () => openModal(fullSrc, dateLabel, visFt, cond));
+        wrapper.addEventListener('click', () => openModal(fullSrc, dateLabel, visFt, cond, tideFt));
         grid.appendChild(wrapper);
       });
 
@@ -749,8 +833,8 @@
       }
     });
 
-    // Load visibility data first, then route
-    loadVisibilityData().then(() => routeFromURL());
+    // Load measurement data first, then route
+    Promise.all([loadVisibilityData(), loadTideData()]).then(() => routeFromURL());
   </script>
 </body>
 </html>

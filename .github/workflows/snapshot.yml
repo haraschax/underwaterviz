@@ -37,6 +37,8 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python grab_snapshot.py
+      - name: Update tide levels
+        run: python backfill_tides.py
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
