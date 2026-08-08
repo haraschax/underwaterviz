@@ -4271,3 +4271,4 @@ timestamp,visibility_ft,conditions
 2026-08-08 09:30,15.0,"Closest 4 ft piling at right is very sharp with clear texture. The 11 ft and 14 ft pilings are both visible but appear somewhat hazy; the far 30 ft pilings are not distinctly separable or textured, largely lost in background glow. This matches conditions where the 14 ft piling is hazy/faded and distant pilings are not clear."
 2026-08-08 10:27,,"Frame shows a mostly black screen with a loading spinner, not an underwater scene, so no pilings or seafloor are visible and visibility cannot be determined."
 2026-08-08 11:35,,"This frame is a browser/media error overlay, not a clean underwater camera snapshot. On-screen graphics obstruct the scene, preventing reliable assessment of piling distances and water clarity, so a visibility estimate cannot be made."
+2026-08-08 12:28,,"Frame shows a reconnecting/offline message, not an underwater scene, so no pilings or water visibility can be assessed."
