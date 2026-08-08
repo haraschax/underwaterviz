@@ -4272,3 +4272,4 @@ timestamp,visibility_ft,conditions
 2026-08-08 10:27,,"Frame shows a mostly black screen with a loading spinner, not an underwater scene, so no pilings or seafloor are visible and visibility cannot be determined."
 2026-08-08 11:35,,"This frame is a browser/media error overlay, not a clean underwater camera snapshot. On-screen graphics obstruct the scene, preventing reliable assessment of piling distances and water clarity, so a visibility estimate cannot be made."
 2026-08-08 12:28,,"Frame shows a reconnecting/offline message, not an underwater scene, so no pilings or water visibility can be assessed."
+2026-08-08 13:27,,"Image shows the Scripps Pier Live Cam webpage with a 'RECONNECTING' message, not an underwater view, so visibility cannot be determined."
