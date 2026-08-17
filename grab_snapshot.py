@@ -12,6 +12,8 @@ Env/flags:
   URL (or --url)              : page to open (default: https://coollab.ucsd.edu/pierviz/)
   START_HOUR, END_HOUR        : inclusive hours to capture (defaults 6..19)
   HEADLESS                    : 'false' to show Chrome
+  CHROME_BINARY               : explicit Chrome executable path (optional)
+  CHROMEDRIVER_BINARY         : explicit ChromeDriver executable path (optional)
   TZ                          : respected by `datetime.now()` if your system honors it
 
 Exit codes:
@@ -31,6 +33,7 @@ import shutil
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -54,6 +57,9 @@ DEFAULT_END = int(os.environ.get("END_HOUR", "19"))
 
 def _make_driver(headless: bool) -> webdriver.Chrome:
     opts = Options()
+    chrome_binary = os.environ.get("CHROME_BINARY")
+    if chrome_binary:
+        opts.binary_location = chrome_binary
     if headless:
         # Use new headless if supported
         opts.add_argument("--headless=new")
@@ -62,6 +68,10 @@ def _make_driver(headless: bool) -> webdriver.Chrome:
     opts.add_argument("--disable-gpu")
     opts.add_argument("--disable-dev-shm-usage")
     opts.add_argument("--hide-scrollbars")
+    chromedriver_binary = os.environ.get("CHROMEDRIVER_BINARY")
+    if chromedriver_binary:
+        service = Service(executable_path=chromedriver_binary)
+        return webdriver.Chrome(service=service, options=opts)
     return webdriver.Chrome(options=opts)
 
 
