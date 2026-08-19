@@ -32,6 +32,7 @@ import sys
 import shutil
 
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -68,6 +69,8 @@ def _make_driver(headless: bool) -> webdriver.Chrome:
     opts.add_argument("--disable-gpu")
     opts.add_argument("--disable-dev-shm-usage")
     opts.add_argument("--hide-scrollbars")
+    # Don't let slow subresources (livestream iframe, trackers) block page load
+    opts.page_load_strategy = "eager"
     chromedriver_binary = os.environ.get("CHROMEDRIVER_BINARY")
     if chromedriver_binary:
         service = Service(executable_path=chromedriver_binary)
@@ -92,11 +95,18 @@ def _try_video_screenshot(driver: webdriver.Chrome, out_path: Path, timeout: int
 def capture_snapshot(url: str, out_path: Path, headless: bool = True) -> None:
     """Open the page, try all contexts for a <video>, else full-page screenshot."""
     driver = _make_driver(headless)
+    driver.set_page_load_timeout(60)
     try:
-        driver.get(url)
-        WebDriverWait(driver, 10).until(
-            lambda d: d.execute_script("return document.readyState") == "complete"
-        )
+        try:
+            driver.get(url)
+        except TimeoutException:
+            pass  # proceed with whatever has loaded
+        try:
+            WebDriverWait(driver, 10).until(
+                lambda d: d.execute_script("return document.readyState") in ("interactive", "complete")
+            )
+        except TimeoutException:
+            pass
         time.sleep(5)  # allow player to hydrate
 
         took = False
