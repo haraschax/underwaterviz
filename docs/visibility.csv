@@ -4330,3 +4330,4 @@ timestamp,visibility_ft,conditions
 2026-08-20 07:34,,"Camera is underwater but view is dominated by a dense school of fish very close to the lens, obscuring the characteristic pier pilings and distance markers. Without clear sight of the pilings or seafloor, a reliable quantitative visibility estimate cannot be made."
 2026-08-20 08:31,5.0,"Only the closest 4 ft piling on the right edge is clearly visible; mid and farther pilings are lost in green haze, indicating very poor water clarity."
 2026-08-20 09:32,5.0,Closest 4 ft piling at right is clear with good texture; the 11 ft piling is only a very faint shadow and farther pilings are not discernible in the green haze. This corresponds to visibility limited to just beyond the closest piling.
+2026-08-20 10:26,5.0,"Only the closest 4 ft piling on the right is clearly visible with texture; the 11 ft piling is not discernible and background is a uniform green haze, indicating very poor water clarity."
