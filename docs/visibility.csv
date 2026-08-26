@@ -4403,3 +4403,4 @@ timestamp,visibility_ft,conditions
 2026-08-26 06:54,5.0,Only the closest 4 ft piling on the right is clearly visible with texture; the 11 ft piling is not discernible and the rest of the scene fades into uniform blue haze. This matches conditions where only the nearest piling is clear.
 2026-08-26 07:42,5.0,Closest 4 ft piling at right is sharp with clear texture. The 11 ft piling is only barely suggested as a dark band and farther pilings are not discernible. This corresponds to conditions where only the closest piling is clearly visible.
 2026-08-26 09:16,,"Camera page shows an offline message, not an underwater view, so visibility cannot be determined."
+2026-08-26 11:57,15.0,"Rightmost 4ft piling is sharp with clear texture. The 11ft piling is not evident, but the 14ft (and likely 30ft) pilings appear only as very faint, hazy silhouettes with no texture. According to the guidelines, a hazy/faded 14ft piling corresponds to about 15 ft visibility."
