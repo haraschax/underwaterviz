@@ -4460,3 +4460,4 @@ timestamp,visibility_ft,conditions
 2026-09-09 06:24,,error: could not convert string to float: '<5'
 2026-09-09 13:24,15.0,"Closest 4 ft piling at right edge is sharp with clear texture. The 11 ft piling is not distinctly visible; a very hazy larger piling silhouette appears farther back (~14 ft), lacking clear edges or texture. No clear view of 30 ft pilings or bottom. This matches conditions where the 14 ft piling is a hazy silhouette."
 2026-09-09 15:57,5.0,"Only the closest right-edge piling (~4 ft) is clearly visible with texture; the mid-right 11 ft piling is not distinct and the scene quickly fades into uniform haze, indicating very limited water clarity."
+2026-09-09 17:50,5.0,Only the nearest 4 ft piling on the right edge is clearly visible with texture; the mid/right 11 ft piling is not distinctly seen and the background is mostly a uniform green haze. This corresponds to the condition where only the closest piling is clear.
