@@ -4465,3 +4465,4 @@ timestamp,visibility_ft,conditions
 2026-09-10 11:05,5.0,"The closest 4 ft piling at right is visible with clear texture. The mid/right and farther pilings appear only as very faint, broad shadows without discernible detail, indicating they are mostly obscured by turbidity. This corresponds to only the nearest piling being clearly seen."
 2026-09-10 14:24,,"Frame is completely white/blank with no discernible underwater scene or pilings, so a visibility estimate cannot be made."
 2026-09-10 16:43,5.0,Closest 4 ft piling on right is sharp with clear texture. The 11 ft piling is not distinctly separated and mid-left/back pilings are only very faint wide silhouettes with no texture. This matches conditions where only the nearest piling is truly clear.
+2026-09-10 19:58,,"Frame is fully covered in digital noise/static with no pier pilings or underwater scene visible, indicating a camera malfunction or invalid snapshot. Visibility cannot be determined."
