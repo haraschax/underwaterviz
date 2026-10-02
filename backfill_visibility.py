@@ -22,7 +22,8 @@ if env_path.exists():
             k, v = line.split("=", 1)
             os.environ.setdefault(k.strip(), v.strip())
 
-from visibility_estimator import estimate_visibility
+from visibility_estimator import classify_snapshot
+from visibility_labels import append_label
 
 VIS_CSV = REPO_ROOT / "docs" / "visibility.csv"
 csv_lock = threading.Lock()
@@ -38,23 +39,18 @@ def load_existing_timestamps():
     return existing
 
 
-def append_row(timestamp, vis_ft, analysis):
+def append_row(timestamp, result):
     with csv_lock:
-        write_header = not VIS_CSV.exists() or VIS_CSV.stat().st_size == 0
-        with open(VIS_CSV, "a", newline="") as f:
-            writer = csv.writer(f)
-            if write_header:
-                writer.writerow(["timestamp", "visibility_ft", "conditions"])
-            vis_str = "" if (vis_ft != vis_ft) else str(vis_ft)  # NaN check
-            writer.writerow([timestamp, vis_str, analysis])
+        append_label(VIS_CSV, timestamp, result)
 
 
 def process_image(img_path, year, month, idx, total):
     day = img_path.parent.name
     hour = img_path.stem.zfill(2)
     timestamp = f"{year}-{month}-{day} {hour}:00"
-    vis_ft, analysis = estimate_visibility(str(img_path))
-    append_row(timestamp, vis_ft, analysis)
+    result = classify_snapshot(str(img_path))
+    append_row(timestamp, result)
+    vis_ft = result["visibility_ft"]
     print(f"  [{idx}/{total}] {timestamp} — ~{vis_ft} ft", flush=True)
     return timestamp, vis_ft
 
