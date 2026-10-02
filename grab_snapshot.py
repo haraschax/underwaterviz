@@ -5,8 +5,8 @@ grab_snapshot.py — Python replacement for the underwaterviz grab_snapshot.sh
 Features:
 - Capture a single PNG into snapshots/YYYY/MM/DD/HH.png during allowed hours.
 - Remove snapshots outside the allowed time window.
-- Build docs/last7days/* and docs/last7days.json (closest-to-noon for last 7 days).
-- Build docs/months.json listing months with snapshots.
+- Estimate visibility and confirm invalid captures with Sol.
+- Build month pages and recent-image indexes, excluding confirmed invalid captures.
 
 Env/flags:
   URL (or --url)              : page to open (default: https://coollab.ucsd.edu/pierviz/)
@@ -22,14 +22,11 @@ Exit codes:
 """
 
 import argparse
-import csv
-import json
 import os
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime
 import time
 import sys
-import shutil
 
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
@@ -39,14 +36,15 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+from build_site import build_site
+from visibility_estimator import classify_snapshot
+from visibility_labels import append_label
 
 # ----------------------- Config / Paths -----------------------
 
 REPO_ROOT = Path(__file__).resolve().parent
 SNAP_BASE = REPO_ROOT / "snapshots"
 THUMB_BASE = REPO_ROOT / "docs" / "thumbnails"
-LAST7_DIR = REPO_ROOT / "docs" / "last7days"
-MONTHS_MANIFEST_FILE = REPO_ROOT / "docs" / "months.json"
 VISIBILITY_CSV = REPO_ROOT / "docs" / "visibility.csv"
 
 DEFAULT_URL = "https://coollab.ucsd.edu/pierviz/"
@@ -186,121 +184,6 @@ def clean_outside_window(snap_base: Path, start_h: int, end_h: int) -> None:
             continue
 
 
-def _load_visibility_data(csv_path):
-    """Load visibility CSV into a dict keyed by 'YYYY-MM-DD HH' for quick lookup."""
-    vis_data = {}
-    if not csv_path.exists():
-        return vis_data
-    with open(csv_path, newline="") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            ts = row.get("timestamp", "").strip()
-            vis = row.get("visibility_ft", "").strip()
-            cond = row.get("conditions", "").strip()
-            if not ts:
-                continue
-            # Key by "YYYY-MM-DD HH" (drop minutes)
-            key = ts[:13]
-            try:
-                vis_data[key] = {"visibility_ft": float(vis), "conditions": cond}
-            except (ValueError, TypeError):
-                vis_data[key] = {"visibility_ft": None, "conditions": cond}
-    return vis_data
-
-
-def build_last7days(snap_base: Path, last7_dir: Path, start_h: int, end_h: int) -> None:
-    """Pick closest-to-noon snapshot for each of last 7 days and write manifest."""
-    last7_dir.mkdir(parents=True, exist_ok=True)
-    # clear old
-    for old in last7_dir.glob("*.png"):
-        old.unlink(missing_ok=True)
-    (last7_dir / "last7days.json").unlink(missing_ok=True)
-
-    vis_data = _load_visibility_data(VISIBILITY_CSV)
-
-    manifest = []
-    noon = 12
-
-    now = datetime.now()
-    for offset in range(0, 7):
-        day = now - timedelta(days=offset)
-        Y = day.strftime("%Y")
-        M = day.strftime("%m")
-        D = day.strftime("%d")
-        day_dir = snap_base / Y / M / D
-        if not day_dir.is_dir():
-            continue
-
-        best_file = None
-        best_diff = 10**9
-
-        for img in day_dir.glob("*.png"):
-            h_str = img.stem
-            if not h_str.isdigit():
-                continue
-            h = int(h_str, 10)
-            if not within_window(h, start_h, end_h):
-                continue
-            diff = abs(h - noon)
-            if diff < best_diff:
-                best_diff = diff
-                best_file = img
-
-        if best_file:
-            out_name = f"{Y}-{M}-{D}_{best_file.stem}.png"
-            shutil.copy2(best_file, last7_dir / out_name)
-            entry = {
-                "file": out_name,
-                "date": f"{Y}-{M}-{D}",
-                "time": best_file.stem
-            }
-            # Attach visibility data if available
-            hour_str = best_file.stem.zfill(2)
-            vis_key = f"{Y}-{M}-{D} {hour_str}"
-            vis_info = vis_data.get(vis_key)
-            if vis_info and vis_info["visibility_ft"] is not None:
-                entry["visibility_ft"] = vis_info["visibility_ft"]
-                entry["conditions"] = vis_info["conditions"]
-            manifest.append(entry)
-
-    with open(last7_dir / "last7days.json", "w") as f:
-        json.dump(manifest, f)
-    
-
-def build_months_manifest(snap_base: Path, out_file: Path) -> None:
-    """List months (year, month) that contain at least one snapshot PNG."""
-    months = []
-    if snap_base.exists():
-        for year_dir in sorted([d for d in snap_base.iterdir() if d.is_dir()]):
-            year = year_dir.name
-            for month_dir in sorted([d for d in year_dir.iterdir() if d.is_dir()]):
-                month = month_dir.name
-                # any PNG in any day dir?
-                has_files = any(p.suffix == ".png" for p in month_dir.rglob("*.png"))
-                if has_files:
-                    months.append({"year": year, "month": month})
-    out_file.parent.mkdir(parents=True, exist_ok=True)
-    with open(out_file, "w") as f:
-        json.dump(months, f)
-
-
-# ----------------------- Visibility estimation -----------------------
-
-from visibility_estimator import estimate_visibility
-
-
-def append_visibility_csv(csv_path, timestamp, visibility_ft, conditions):
-    """Append a row to the visibility CSV, creating it with headers if needed."""
-    write_header = not csv_path.exists()
-    csv_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(csv_path, "a", newline="") as f:
-        writer = csv.writer(f)
-        if write_header:
-            writer.writerow(["timestamp", "visibility_ft", "conditions"])
-        vis_str = "" if (visibility_ft != visibility_ft) else str(visibility_ft)  # NaN check
-        writer.writerow([timestamp, vis_str, conditions])
-
-
 # ----------------------- CLI -----------------------
 
 def main():
@@ -340,9 +223,9 @@ def main():
             # Estimate visibility via LLM
             timestamp = now.strftime("%Y-%m-%d %H:%M")
             print("Estimating visibility...")
-            vis_ft, conditions = estimate_visibility(out_file)
-            append_visibility_csv(VISIBILITY_CSV, timestamp, vis_ft, conditions)
-            print(f"  Visibility: ~{vis_ft} ft — {conditions}")
+            result = classify_snapshot(out_file)
+            append_label(VISIBILITY_CSV, timestamp, result)
+            print(f"  Visibility: {result['visibility_ft']} ft; invalid capture: {result['invalid_image']}")
 
         except Exception as e:
             print(f"Error while capturing snapshot: {e}", file=sys.stderr)
@@ -352,9 +235,8 @@ def main():
 
     # Housekeeping: remove outside-window files, then rebuild manifests
     clean_outside_window(SNAP_BASE, args.start_hour, args.end_hour)
-    build_last7days(SNAP_BASE, LAST7_DIR, args.start_hour, args.end_hour)
-    build_months_manifest(SNAP_BASE, MONTHS_MANIFEST_FILE)
-    print("Updated docs/last7days and docs/months.json")
+    build_site(SNAP_BASE, REPO_ROOT / "docs")
+    print("Updated site indexes and recent images")
 
 if __name__ == "__main__":
     main()

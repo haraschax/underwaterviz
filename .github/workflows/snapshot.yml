@@ -32,9 +32,10 @@ jobs:
           chrome-version: '152.0.7977.42'
           install-chromedriver: true
           install-dependencies: true
-      - name: Run snapshot script
+      - name: Capture snapshot and label with GPT-6.1 Sol
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          VISIBILITY_MODEL: gpt-6.1-sol
           CHROME_BINARY: ${{ steps.setup-chrome.outputs.chrome-path }}
           CHROMEDRIVER_BINARY: ${{ steps.setup-chrome.outputs.chromedriver-path }}
         run: python grab_snapshot.py

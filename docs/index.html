@@ -44,6 +44,8 @@
       gap: 10px;
     }
     .item {
+      font: inherit;
+      color: inherit;
       background-color: #fff;
       border: 1px solid #ddd;
       border-radius: 4px;
@@ -62,12 +64,32 @@
       gap: 10px;
     }
     .grid img {
+      display: block;
+      box-sizing: border-box;
       width: 100%;
       height: auto;
       border: 1px solid #ddd;
       border-radius: 4px;
       box-shadow: 0 1px 2px rgba(0,0,0,0.1);
       cursor: pointer;
+    }
+    .snapshot {
+      position: relative;
+      padding: 0;
+      border: 0;
+      border-radius: 4px;
+      background: #e3e9eb;
+      min-width: 0;
+      cursor: pointer;
+    }
+    .snapshot-label {
+      position: absolute;
+      bottom: 4px;
+      left: 4px;
+      padding: 2px 4px;
+      font-size: 12px;
+      color: white;
+      background: rgba(0,0,0,0.5);
     }
     .overlay {
       position: fixed;
@@ -159,7 +181,6 @@
   <div id="content"></div>
 
   <script>
-    const apiBase = 'https://api.github.com/repos/haraschax/underwaterviz/contents/snapshots';
     const rawBase = 'https://raw.githubusercontent.com/haraschax/underwaterviz/master/snapshots';
 
     const breadcrumbDiv = document.getElementById('breadcrumb');
@@ -176,8 +197,18 @@
 
     let currentYear = null;
     let currentMonth = null;
+    let viewController = null;
+    let measurementsPromise = null;
 
-    // Measurement data loaded from CSV
+    function beginView() {
+      if (viewController) viewController.abort();
+      viewController = new AbortController();
+      contentDiv.replaceChildren();
+      overlay.style.display = 'none';
+      return viewController.signal;
+    }
+
+    // Measurement data
     let visibilityData = {};
     let tideData = {};
 
@@ -200,6 +231,9 @@
     overlay.appendChild(overlayContainer);
     overlay.addEventListener('click', () => {
       overlay.style.display = 'none';
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') overlay.style.display = 'none';
     });
     document.body.appendChild(overlay);
 
@@ -227,29 +261,13 @@
       overlay.style.display = 'flex';
     }
 
-    // --- Visibility CSV loading ---
+    // --- Measurement loading ---
 
     async function loadVisibilityData() {
       try {
-        const response = await fetch('visibility.csv');
+        const response = await fetch('visibility.json');
         if (!response.ok) return;
-        const text = await response.text();
-        const lines = text.trim().split('\n');
-        if (lines.length < 2) return;
-        // Parse CSV: timestamp,visibility_ft,conditions
-        for (let i = 1; i < lines.length; i++) {
-          const match = lines[i].match(/^([^,]+),([^,]*),(.*)/);
-          if (!match) continue;
-          const ts = match[1].trim();
-          const vis = match[2].trim();
-          const cond = match[3].trim().replace(/^"|"$/g, '');
-          // Key by "YYYY-MM-DD HH" (first 13 chars of timestamp)
-          const key = ts.substring(0, 13);
-          visibilityData[key] = {
-            visibility_ft: vis === '' ? null : parseFloat(vis),
-            conditions: cond
-          };
-        }
+        visibilityData = await response.json();
       } catch (e) {
         console.error('Failed to load visibility data:', e);
       }
@@ -273,11 +291,6 @@
       }
     }
 
-    function getVisibility(year, month, day, hour) {
-      const key = `${year}-${month}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}`;
-      return visibilityData[key] || null;
-    }
-
     function getTide(year, month, day, hour) {
       const key = `${year}-${month}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}`;
       return tideData[key] ?? null;
@@ -286,12 +299,12 @@
     function createVisBadge(visFt, conditions) {
       const badge = document.createElement('div');
       badge.className = 'vis-badge';
+      if (conditions) badge.title = conditions;
       if (visFt == null || isNaN(visFt)) {
-        badge.textContent = 'nan';
+        badge.textContent = 'Visibility n/a';
         badge.style.backgroundColor = 'rgba(100, 100, 100, 0.75)';
       } else {
         badge.textContent = `~${Math.round(visFt)} ft`;
-        if (conditions) badge.title = conditions;
         if (visFt >= 20) {
           badge.style.backgroundColor = 'rgba(0, 150, 0, 0.75)';
         } else if (visFt >= 12) {
@@ -334,42 +347,6 @@
       return { year, month: String(idx + 1).padStart(2, '0') };
     }
 
-    // --- GitHub API fetch with caching ---
-
-    async function fetchDir(path = '') {
-      const cacheKey = path || 'root';
-      try {
-        const cachedRaw = sessionStorage.getItem(`uw_cache_${cacheKey}`);
-        if (cachedRaw) {
-          try {
-            const cached = JSON.parse(cachedRaw);
-            const oneHour = 60 * 60 * 1000;
-            if (Date.now() - cached.time < oneHour) {
-              return cached.data;
-            }
-            sessionStorage.removeItem(`uw_cache_${cacheKey}`);
-          } catch (e) {
-            sessionStorage.removeItem(`uw_cache_${cacheKey}`);
-          }
-        }
-      } catch (e) {}
-      try {
-        const url = path ? `${apiBase}/${path}` : apiBase;
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch ${url}: ${response.status}`);
-        }
-        const data = await response.json();
-        try {
-          sessionStorage.setItem(`uw_cache_${cacheKey}`, JSON.stringify({ data, time: Date.now() }));
-        } catch (e) {}
-        return data;
-      } catch (err) {
-        console.error(err);
-        return [];
-      }
-    }
-
     // --- Breadcrumb ---
 
     function setBreadcrumb(parts) {
@@ -394,20 +371,48 @@
     }
 
     function createItem(name, onClick) {
-      const div = document.createElement('div');
+      const div = document.createElement('button');
+      div.type = 'button';
       div.className = 'item';
       div.textContent = name;
       div.addEventListener('click', onClick);
       return div;
     }
 
+    function createSnapshot(info, index = 0) {
+      const {year, month, day, file, visibility_ft: visFt, conditions: cond, tide_ft: tideFt} = info;
+      const hour = file.split('.')[0].padStart(2, '0');
+      const dateLabel = `${year}-${month}-${day} ${hour}:00`;
+      const fullSrc = info.fullSrc || `${rawBase}/${year}/${month}/${day}/${file}`;
+      const wrapper = document.createElement('button');
+      wrapper.type = 'button';
+      wrapper.className = 'snapshot';
+      wrapper.setAttribute('aria-label', `Open ${dateLabel}`);
+      const img = document.createElement('img');
+      img.width = 480;
+      img.height = 235;
+      img.loading = index < 4 ? 'eager' : 'lazy';
+      img.decoding = 'async';
+      if (index === 0) img.fetchPriority = 'high';
+      img.alt = dateLabel;
+      img.title = dateLabel;
+      img.src = `thumbnails/${year}/${month}/${day}/${hour}.jpg`;
+      const label = document.createElement('span');
+      label.className = 'snapshot-label';
+      label.textContent = dateLabel;
+      wrapper.append(img, label, createVisBadge(visFt, cond), createTideBadge(tideFt));
+      wrapper.addEventListener('click', () => openModal(fullSrc, dateLabel, visFt, cond, tideFt));
+      return wrapper;
+    }
+
     // --- Last 7 days ---
 
-    async function loadLast7DaysImages() {
+    async function loadLast7DaysImages(parent, signal) {
       try {
-        const response = await fetch('last7days/last7days.json');
+        const response = await fetch('last7days/last7days.json', { signal });
         if (!response.ok) return;
         const imagesInfo = await response.json();
+        if (signal.aborted) return;
         if (!Array.isArray(imagesInfo) || imagesInfo.length === 0) return;
 
         const section = document.createElement('div');
@@ -418,43 +423,21 @@
         const grid = document.createElement('div');
         grid.className = 'grid';
 
-        imagesInfo.forEach(info => {
-          const wrapper = document.createElement('div');
-          wrapper.style.position = 'relative';
-          const img = document.createElement('img');
-          img.src = `last7days/${info.file}`;
-          const dateLabel = `${info.date} ${info.time.padStart(2, '0')}:00`;
-          img.alt = dateLabel;
-          img.title = dateLabel;
-          img.style.display = 'block';
-          const label = document.createElement('div');
-          label.textContent = dateLabel;
-          label.style.position = 'absolute';
-          label.style.bottom = '4px';
-          label.style.left = '4px';
-          label.style.padding = '2px 4px';
-          label.style.fontSize = '12px';
-          label.style.color = 'white';
-          label.style.backgroundColor = 'rgba(0,0,0,0.5)';
-          wrapper.appendChild(img);
-          wrapper.appendChild(label);
-
-          // Visibility badge from manifest
-          const visFt = info.visibility_ft != null ? info.visibility_ft : null;
-          const cond = info.conditions || '';
-          wrapper.appendChild(createVisBadge(visFt, cond));
+        imagesInfo.forEach((info, index) => {
           const [year, month, day] = info.date.split('-');
-          const tideFt = getTide(year, month, day, parseInt(info.time, 10));
-          wrapper.appendChild(createTideBadge(tideFt));
-
-          wrapper.addEventListener('click', () => openModal(img.src, dateLabel, visFt, cond, tideFt));
-          grid.appendChild(wrapper);
+          grid.appendChild(createSnapshot({
+            year, month, day, file: `${info.time}.png`,
+            fullSrc: `last7days/${info.file}`,
+            visibility_ft: info.visibility_ft ?? null,
+            conditions: info.conditions || '',
+            tide_ft: getTide(year, month, day, parseInt(info.time, 10))
+          }, index));
         });
 
         section.appendChild(grid);
-        contentDiv.appendChild(section);
+        parent.appendChild(section);
       } catch (err) {
-        console.error(err);
+        if (!signal.aborted) console.error(err);
       }
     }
 
@@ -505,7 +488,7 @@
       section.style.maxWidth = '1100px';
 
       const heading = document.createElement('h2');
-      heading.textContent = 'La Jolla Pier 6 Months Visibility Trend';
+      heading.textContent = 'La Jolla Pier Visibility Trend';
       heading.style.textAlign = 'center';
       section.appendChild(heading);
 
@@ -629,13 +612,22 @@
     // --- All months view (home) ---
 
     async function loadAllMonths() {
-      contentDiv.innerHTML = '';
+      const signal = beginView();
       if (!history.state || history.state.view !== 'months') {
         history.replaceState({ view: 'months' }, '', '/');
       }
       setBreadcrumb(['Home']);
-      renderVisibilityChart(contentDiv);
-      await loadLast7DaysImages();
+      const chart = document.createElement('div');
+      const recent = document.createElement('div');
+      contentDiv.append(chart, recent);
+      if (!measurementsPromise) {
+        measurementsPromise = Promise.all([loadVisibilityData(), loadTideData()]);
+      }
+      measurementsPromise.then(() => {
+        if (signal.aborted) return;
+        renderVisibilityChart(chart);
+        loadLast7DaysImages(recent, signal);
+      });
 
       const heading = document.createElement('h2');
       heading.textContent = 'Browse historical pictures';
@@ -644,9 +636,10 @@
       contentDiv.appendChild(heading);
 
       try {
-        const response = await fetch('months.json');
+        const response = await fetch('months.json', { signal });
         if (!response.ok) throw new Error('Failed to load months manifest');
         const monthsList = await response.json();
+        if (signal.aborted) return;
         if (!Array.isArray(monthsList) || monthsList.length === 0) throw new Error('Invalid months manifest');
 
         monthsList.sort((a, b) => {
@@ -664,6 +657,7 @@
         });
         contentDiv.appendChild(container);
       } catch (err) {
+        if (signal.aborted) return;
         console.error(err);
         const msg = document.createElement('p');
         msg.textContent = 'No historical images are available.';
@@ -713,6 +707,8 @@
       contentDiv.appendChild(infoP);
 
       const exampleImg = document.createElement('img');
+      exampleImg.loading = 'lazy';
+      exampleImg.decoding = 'async';
       exampleImg.src = 'great_visibility.png';
       exampleImg.alt = 'Example of great underwater visibility';
       exampleImg.style.display = 'block';
@@ -725,6 +721,7 @@
     // --- Month view (flattened days) ---
 
     async function loadDays(year, month, pushHistory = false) {
+      const signal = beginView();
       currentYear = year;
       currentMonth = month;
       const slug = monthSlug(year, month);
@@ -735,82 +732,45 @@
 
       const monthDisplay = `${monthNames[parseInt(month, 10) - 1]} ${year}`;
       setBreadcrumb(['Home', monthDisplay]);
-      contentDiv.innerHTML = '';
 
       const loadingDiv = document.createElement('div');
       loadingDiv.className = 'loading';
+      loadingDiv.setAttribute('role', 'status');
       loadingDiv.textContent = 'Loading images...';
       contentDiv.appendChild(loadingDiv);
 
-      const items = await fetchDir(`${year}/${month}`);
-      const dayDirs = items.filter(item => item.type === 'dir');
-      const images = [];
-      for (const dir of dayDirs) {
-        const day = dir.name;
-        const dayItems = await fetchDir(`${year}/${month}/${day}`);
-        const files = dayItems.filter(item => item.type === 'file');
-        files.forEach(file => {
-          const hour = parseInt(file.name.split('.')[0], 10);
-          if (hour >= 6 && hour < 20) {
-            images.push({ year, month, day, file: file.name });
-          }
+      try {
+        const response = await fetch(`months/${year}-${month}.json`, { signal });
+        if (!response.ok) throw new Error(`Failed to load month: ${response.status}`);
+        const images = await response.json();
+        if (signal.aborted) return;
+        if (images.length === 0) {
+          loadingDiv.textContent = 'No images are available for this month.';
+          return;
+        }
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+        images.forEach((info, index) => {
+          grid.appendChild(createSnapshot({ ...info, year, month }, index));
         });
+        contentDiv.replaceChildren(grid);
+      } catch (err) {
+        if (signal.aborted) return;
+        console.error(err);
+        loadingDiv.textContent = 'Could not load this month. ';
+        loadingDiv.appendChild(createItem('Try again', () => loadDays(year, month)));
       }
-      images.sort((a, b) => {
-        const da = parseInt(a.day, 10), db = parseInt(b.day, 10);
-        if (da !== db) return da - db;
-        return parseInt(a.file.split('.')[0], 10) - parseInt(b.file.split('.')[0], 10);
-      });
-
-      contentDiv.innerHTML = '';
-      const grid = document.createElement('div');
-      grid.className = 'grid';
-
-      images.forEach(info => {
-        const wrapper = document.createElement('div');
-        wrapper.style.position = 'relative';
-        const img = document.createElement('img');
-        const hourStr = info.file.split('.')[0].padStart(2, '0');
-        img.src = `thumbnails/${info.year}/${info.month}/${info.day}/${hourStr}.jpg`;
-        const fullSrc = `${rawBase}/${info.year}/${info.month}/${info.day}/${info.file}`;
-        const dateLabel = `${info.year}-${info.month}-${info.day} ${hourStr}:00`;
-        img.alt = dateLabel;
-        img.title = dateLabel;
-        img.style.display = 'block';
-        const label = document.createElement('div');
-        label.textContent = dateLabel;
-        label.style.position = 'absolute';
-        label.style.bottom = '4px';
-        label.style.left = '4px';
-        label.style.padding = '2px 4px';
-        label.style.fontSize = '12px';
-        label.style.color = 'white';
-        label.style.backgroundColor = 'rgba(0,0,0,0.5)';
-        wrapper.appendChild(img);
-        wrapper.appendChild(label);
-
-        // Visibility badge from CSV data
-        const hour = parseInt(info.file.split('.')[0], 10);
-        const visInfo = getVisibility(info.year, info.month, info.day, hour);
-        const visFt = visInfo ? visInfo.visibility_ft : null;
-        const cond = visInfo ? visInfo.conditions : '';
-        wrapper.appendChild(createVisBadge(visFt, cond));
-        const tideFt = getTide(info.year, info.month, info.day, hour);
-        wrapper.appendChild(createTideBadge(tideFt));
-
-        wrapper.addEventListener('click', () => openModal(fullSrc, dateLabel, visFt, cond, tideFt));
-        grid.appendChild(wrapper);
-      });
-
-      contentDiv.appendChild(grid);
     }
 
     // --- URL routing on page load ---
 
     function routeFromURL() {
       // Check for redirect from 404.html
-      const redirectPath = sessionStorage.getItem('redirect_path');
-      if (redirectPath) sessionStorage.removeItem('redirect_path');
+      let redirectPath = null;
+      try {
+        redirectPath = sessionStorage.getItem('redirect_path');
+        if (redirectPath) sessionStorage.removeItem('redirect_path');
+      } catch (e) {}
       const path = (redirectPath || window.location.pathname).replace(/^\/+|\/+$/g, '');
       if (path) {
         const parsed = parseMonthSlug(path);
@@ -833,8 +793,7 @@
       }
     });
 
-    // Load measurement data first, then route
-    Promise.all([loadVisibilityData(), loadTideData()]).then(() => routeFromURL());
+    routeFromURL();
   </script>
 </body>
 </html>

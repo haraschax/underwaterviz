@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 visibility_estimator.py — Estimate underwater visibility (in feet) from
-Scripps Pier camera snapshots using OpenAI's gpt-5.1 vision model.
+Scripps Pier camera snapshots using OpenAI's GPT-6.1 Sol vision model.
 
 Can be used as a module:
     from visibility_estimator import estimate_visibility
@@ -17,6 +17,8 @@ import base64
 import json
 import time
 from pathlib import Path
+
+from visibility_labels import INVALID_THRESHOLD, MODEL
 
 REPO_ROOT = Path(__file__).resolve().parent
 LABELED_IMAGE = REPO_ROOT / "reference" / "labeled_viz.png"
@@ -54,19 +56,90 @@ the sandy bottom: 35 ft
 
 Clearly go through the steps above. Think clearly.
 
-IMPORTANT: If the image is NOT a valid underwater snapshot (e.g., error page, \
-offline message, webpage screenshot, completely black frame, camera malfunction, \
-animal blocking the lens, or anything else that prevents a reliable visibility \
-reading), you MUST set visibility_ft to "nan".\
 """
+
+VALIDITY_PROMPT = """\
+Separately decide whether this is an invalid capture, not just poor water visibility.
+Set invalid_image=true ONLY with at least 0.98 confidence and specific visible
+evidence of a stream-offline message, error/web page replacing the underwater
+feed, truly blank capture, obvious camera failure, or an identifiable object
+physically covering the lens. Quote any error/offline text you can actually read.
+Do not invent such evidence.
+
+Murky, dark, green, cloudy, hazy, low-contrast, or feature-poor water is NOT an
+invalid image. Missing distant pilings, suspended sediment, and very low or zero
+visibility are valid conditions. Blur alone is not proof of camera malfunction.
+Player controls, timestamps, text overlays, or webpage borders are not grounds
+for exclusion if a usable underwater scene is still visible. Do not infer an
+outage or frozen stream from a single underwater frame. A dark underwater scene
+is not a blank capture. When unsure, set invalid_image=false and keep the image.
+
+invalid_confidence is your confidence (0 to 1) that there is a capture failure,
+not your confidence in the visibility estimate. Use invalid_reason="none" and
+invalid_evidence="" when invalid_image=false. For valid very poor visibility,
+estimate 0 to 5 ft from the scene; do not substitute null for low visibility.
+Use visibility_ft=null for invalid captures, or if no estimate is possible even
+though there is insufficient evidence to label the capture invalid.
+"""
+
+SYSTEM_PROMPT += "\n" + VALIDITY_PROMPT
+
+LABEL_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "analysis": {"type": "string"},
+        "visibility_ft": {"type": ["number", "null"]},
+        "invalid_image": {"type": "boolean"},
+        "invalid_confidence": {"type": "number"},
+        "invalid_reason": {"type": "string", "enum": [
+            "none", "stream_offline", "error_page", "blank_capture",
+            "camera_failure", "lens_obstructed",
+        ]},
+        "invalid_evidence": {"type": "string"},
+    },
+    "required": ["analysis", "visibility_ft", "invalid_image", "invalid_confidence",
+                 "invalid_reason", "invalid_evidence"],
+    "additionalProperties": False,
+}
 
 USER_PROMPT = """\
 Analyze this underwater camera snapshot from Scripps Pier and estimate the \
 visibility in feet.
 
 Respond in this exact JSON format (no markdown, no code fences):
-{"analysis": "<brief description>", "visibility_ft": <number or "nan">}\
+{"analysis": "<brief description>", "visibility_ft": <number or null>,
+ "invalid_image": <true or false>, "invalid_confidence": <0 to 1>,
+ "invalid_reason": "<reason enum>", "invalid_evidence": "<specific evidence or empty>"}\
 """
+
+REVIEW_PROMPT = """\
+Review this Scripps Pier camera snapshot for capture validity. Decide from the
+image alone whether it shows a genuine underwater scene, including very poor
+visibility, or a clearly invalid capture.\n""" + VALIDITY_PROMPT + """\n
+Return the requested JSON. Use visibility_ft=null; this review is only about
+capture validity. Explain the visible evidence briefly in analysis.
+"""
+
+
+def invalid_candidate(result):
+    return (result["invalid_image"] and INVALID_THRESHOLD <= result["invalid_confidence"] <= 1
+            and result["invalid_reason"] != "none" and bool(result["invalid_evidence"].strip()))
+
+
+def finalize_label(result, review=None):
+    result = dict(result)
+    confirmed = invalid_candidate(result) and review is not None and invalid_candidate(review)
+    result["invalid_image"] = bool(confirmed)
+    result["invalid_confirmed"] = bool(confirmed)
+    result["model"] = MODEL
+    if review is not None:
+        result["invalid_confidence"] = min(result["invalid_confidence"], review["invalid_confidence"])
+    if confirmed:
+        result["visibility_ft"] = None
+    else:
+        result["invalid_reason"] = "none"
+        result["invalid_evidence"] = ""
+    return result
 
 
 def _encode_image(image_path):
@@ -74,14 +147,11 @@ def _encode_image(image_path):
         return base64.b64encode(f.read()).decode("utf-8")
 
 
-def estimate_visibility(image_path):
-    """Estimate underwater visibility from a Scripps Pier snapshot.
-
-    Returns (visibility_ft, analysis) where visibility_ft is a float or NaN.
-    """
+def classify_snapshot(image_path):
+    """Estimate visibility and confirm any proposed invalid capture separately."""
     api_key = os.environ.get("OPENAI_API_KEY", "")
     if not api_key:
-        return float("nan"), "OPENAI_API_KEY not set"
+        return failed_label("OPENAI_API_KEY not set")
 
     from openai import OpenAI
     client = OpenAI(api_key=api_key)
@@ -122,42 +192,55 @@ def estimate_visibility(image_path):
         "image_url": {"url": f"data:{media_type};base64,{b64}"},
     })
 
-    max_retries = 5
-    for attempt in range(max_retries):
+    try:
+        result = _api_request(client, SYSTEM_PROMPT, content)
+        review = None
+        if invalid_candidate(result):
+            review = _api_request(client, REVIEW_PROMPT, [content[-1]])
+        return finalize_label(result, review)
+    except Exception as error:
+        print(f"  Visibility estimation failed: {error}", file=sys.stderr)
+        return failed_label(f"error: {error}")
+
+
+def failed_label(message):
+    return {
+        "visibility_ft": None, "analysis": message, "invalid_image": False,
+        "invalid_confirmed": False, "invalid_confidence": 0,
+        "invalid_reason": "none", "invalid_evidence": "", "model": "",
+    }
+
+
+def _api_request(client, prompt, content):
+    for attempt in range(5):
         try:
             response = client.chat.completions.create(
-                model="gpt-5.1",
+                model=MODEL,
+                reasoning_effort="low",
                 messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "system", "content": prompt},
                     {"role": "user", "content": content},
                 ],
                 max_completion_tokens=5000,
+                response_format={"type": "json_schema", "json_schema": {
+                    "name": "visibility_label", "strict": True, "schema": LABEL_SCHEMA,
+                }},
             )
-
-            raw = response.choices[0].message.content.strip()
-            if raw.startswith("```"):
-                raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-
-            result = json.loads(raw)
-            vis = result.get("visibility_ft")
-            analysis = result.get("analysis", "")
-
-            if vis is None or str(vis).lower() == "nan":
-                return float("nan"), analysis
-            return float(vis), analysis
-
+            return json.loads(response.choices[0].message.content)
         except Exception as e:
             err_str = str(e)
-            if "429" in err_str or "rate_limit" in err_str.lower():
+            if attempt < 4 and ("429" in err_str or "rate_limit" in err_str.lower()):
                 wait = 2 ** attempt + 1
                 print(f"  Rate limited, retrying in {wait}s...", file=sys.stderr)
                 time.sleep(wait)
                 continue
-            print(f"  Visibility estimation failed: {e}", file=sys.stderr)
-            return float("nan"), f"error: {e}"
+            raise
 
-    print(f"  Exhausted retries for {image_path}", file=sys.stderr)
-    return float("nan"), "error: rate limit retries exhausted"
+
+def estimate_visibility(image_path):
+    result = classify_snapshot(image_path)
+    value = result["visibility_ft"]
+    return (float("nan") if value is None else value), result["analysis"]
 
 
 def main():
@@ -179,10 +262,11 @@ def main():
             print(f"{path}: File not found")
             continue
 
-        vis_ft, analysis = estimate_visibility(path)
+        result = classify_snapshot(path)
         print(f"{path}")
-        print(f"  Visibility: ~{vis_ft} ft")
-        print(f"  Analysis: {analysis}")
+        print(f"  Visibility: {result['visibility_ft']} ft")
+        print(f"  Invalid capture: {result['invalid_image']}")
+        print(f"  Analysis: {result['analysis']}")
         print()
 
 
